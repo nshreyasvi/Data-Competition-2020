@@ -1,0 +1,205 @@
+---
+title: " ML EXPLORATORY DATA ANALYSIS EDA"
+output: html_notebook
+---
+
+
+
+TO DO/ADD:
+(https://towardsdatascience.com/exploratory-data-analysis-in-r-for-beginners-fe031add7072
+INCLUDE GGPLOT 2
+
+AND INCLUDE ESQUISSE
+https://towardsdatascience.com/top-r-libraries-for-data-science-9b24f658e243)
+
+
+
+```{r}
+##install.packages("DataExplorer")
+
+library(tidyverse)
+library(DataExplorer)
+
+web<- dataset
+glimpse(web)
+#To go with glimpse(), DataExplorer itself has got a function called introduce()
+introduce(web)
+
+#The same introduce() could also be plotted in a pretty graph.
+plot_intro(web,  ggtheme = theme_dark(),
+             title = "EDA with Data Explorer",
+             )
+```
+
+
+EDA – Missing
+```{r}
+plot_missing(web,  
+             ggtheme = theme_dark(),
+             title = " Features missing from the whole observations",
+             )
+```
+
+EDA for Continuous
+```{r}
+##for univariate
+?DataExplorer()
+
+DataExplorer::plot_histogram(web,  
+             ggtheme = theme_dark(),
+             title = " Histogram of continuous features",
+             )
+
+plot_density(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             )  # age, time_spent, X4 are right skewed
+#outcome old hase a mode which is na-> remove this category? or remove this variable??
+
+plot_bar(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             )  ##VISUALIZE DATA WHEN X2=1 AND =2 (subsetting)
+
+                    
+                    a<- filter(web, web$X1==1)
+                    b<- filter(web, web$X1==2)
+                    plot_bar(a)
+                    plot_bar(b)
+                    plot_density(a,
+                                 title = " a")
+                    plot_density(b,
+                                 title = " b") # => we see that when X1=2 there is more noise and                                                      variation in y output
+
+##for bivariate
+  plot_boxplot(web, by= 'day' , ncol = 1,   
+             ggtheme = theme_dark(),
+             title = " Boxplot of continuous features by day",
+             )
+  ?plot_boxplot()
+
+##autocorr plot
+plot_correlation(web, cor_args = list( 'use' = 'complete.obs'),  
+             ggtheme = theme_dark(),
+             title = " Autocorr Plot",
+             )
+
+##continurous correlation plot
+plot_correlation(web, type = 'c',cor_args = list( 'use' = 'complete.obs'),  
+             ggtheme = theme_dark(),
+             title = " Continuous corr Plot",
+             )   #marital and age negative correlation/ edu and job pos corr/ pos corr outcomr old and banner old, days old and banners old, y and outcome old
+
+```
+
+
+EDA for Categorical
+```{r}
+plot_bar(a, maxcat = 390, parallel = FALSE,  
+             ggtheme = theme_dark(),
+             title = " Categorical Features Plot",
+             )
+```
+
+
+Correction
+```{r}
+web<- dataset
+
+web$age<-sqrt(web$age)
+web$time_spent<-sqrt(sqrt(web$time_spent))
+ # age, time_spent are right skewed
+plot_density(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             ) 
+dataset<-web
+
+```
+
+
+PCA ANALYSIS
+You need to consider only numerical data, so leaving out: job, marital, education, device, outcome old
+
+```{r}
+
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
+
+str(web)
+web.pca <- prcomp(web, center = TRUE, scale. = TRUE)
+
+summary(web.pca)
+
+str(web.pca)
+
+ggbiplot(web.pca)
+ggbiplot(web.pca, labels=rownames(web)) #PCA 1,2 -> banner view old and day elapsed old (positive impact), banners views, education, age have also impact on PCA 1 and 2) 
+ggbiplot(web.pca,ellipse=TRUE,choices=c(2,3),   labels=rownames(web)) #PCA 2,3 ->confirms last plot, with also marital impact
+ggbiplot(web.pca,ellipse=TRUE,choices=c(3,4),   labels=rownames(web)) #PCA 3 and 4 -> time spent
+
+#webs.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+#ggbiplot(web.pca,ellipse=TRUE,  labels=rownames(web$age), groups = web.country)
+
+
+```
+
+
+Lasso & Ridge(to finish)
+```{r}
+library(tidyverse)
+library(caret)
+library(glmnet)
+
+# Split the data into training and test set
+set.seed(123) 
+training.samples <- web %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <-web[training.samples, ]
+test.data <- web[-training.samples, ]
+
+# Predictor variables
+x <- model.matrix(web~., train.data)[,-1]
+# Outcome variable
+y <- train.data$web
+
+set.seed(123)
+model <- train(
+  web ~., data = train.data, method = "glmnet",
+  trControl = trainControl("cv", number = 10),
+  tuneLength = 10
+)
+# Best tuning parameter
+model$bestTune
+
+# Coefficient of the final model. You need
+# to specify the best lambda
+coef(model$finalModel, model$bestTune$lambda)
+
+# Make predictions on the test data
+x.test <- model.matrix(web ~., test.data)[,-1]
+predictions <- model %>% predict(x.test)
+# Model performance metrics
+data.frame(
+  RMSE = RMSE(predictions, test.data$web),
+  Rsquare = R2(predictions, test.data$web)
+)
+
+
+```
+
+
+
+EDA Report
+```{r}
+create_report(
+  web,
+  output_file = "EDA report.html",
+  output_dir = getwd(),
+  y = NULL,
+  config = configure_report(),
+  report_title = "Exploratory Data Analysis Report")
+##getwd()
+```
+
