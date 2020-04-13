@@ -6,26 +6,18 @@ rm(list=ls())
 dataset = read.csv('train.csv')
 dataset_1 = read.csv('test.csv')
 
-#Numeric like variables
-dataset$age=as.numeric(as.factor(dataset$age))
-dataset$day=as.numeric(as.factor(dataset$day))
-dataset$month=as.numeric(as.factor(dataset$month))
-dataset$time_spent=as.numeric(as.factor(dataset$time_spent))
-dataset$banner_views=as.numeric(as.factor(dataset$banner_views))
-dataset$banner_views_old=as.numeric(as.factor(dataset$banner_views_old))
-dataset$days_elapsed_old=as.numeric(as.factor(dataset$days_elapsed_old))
-dataset$X1=as.numeric(as.factor(dataset$X1))
-dataset$X2=as.numeric(as.factor(dataset$X2))
-dataset$X3=as.numeric(as.factor(dataset$X3))
-dataset$X4=as.numeric(as.factor(dataset$X4))
+#Changing the data
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- NA
+dataset[ dataset == "na" ] <- NA
 
 #Factor like columns
-dataset$job=as.numeric(as.factor(dataset$job))
-dataset$marital=as.numeric(as.factor(dataset$marital))
-dataset$education=as.numeric(as.factor(dataset$education))
-dataset$device=as.numeric(as.factor(dataset$device))
-dataset$outcome_old=as.numeric(as.factor(dataset$outcome_old))
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 
+dataset[is.na(dataset)] <- 0
 
 #Less dependent variables (X2, month, day, education marital job age i.e. 1,2,3,4,6,7,14)
 cor(dataset)
@@ -48,8 +40,9 @@ test_set = subset(dataset, split == FALSE)
 training_set[-17] = scale(training_set[-17])
 test_set[-17] = scale(test_set[-17])
 
-library(e1071)
-classifier = svm(formula = y ~ age*job*marital*education+device*day*month*time_spent+banner_views+banner_views_old+days_elapsed_old+outcome_old+X1*X2+X3+X4,
+
+#library(e1071)
+classifier = svm(formula = y ~ .,#age*job*marital*education+device*day*month+time_spent*banner_views+banner_views_old+days_elapsed_old+outcome_old+X1*X2+X3+X4,
                  data = training_set,
                  type = 'C-classification',
                  kernel = 'radial')
