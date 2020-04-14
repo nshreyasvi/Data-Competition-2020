@@ -7,8 +7,14 @@ dataset = read.csv('train.csv')
 dataset_1 = read.csv('test.csv')
 
 #Changing the data
-dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- NA
-dataset[ dataset == "na" ] <- NA
+#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+#dataset[ dataset == "na" ] <- NA
+
+#Plotting to check outliers
+summary(dataset)
+
+#dataset$age=sqrt(dataset$age)
+#dataset$time_spent=sqrt(dataset$age)
 
 #Factor like columns
 dataset$job=as.integer(as.factor(dataset$job))
@@ -17,7 +23,7 @@ dataset$education=as.integer(as.factor(dataset$education))
 dataset$device=as.integer(as.factor(dataset$device))
 dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 
-dataset[is.na(dataset)] <- 0
+#dataset[is.na(dataset)] <- 0
 
 #Less dependent variables (X2, month, day, education marital job age i.e. 1,2,3,4,6,7,14)
 cor(dataset)
@@ -41,11 +47,11 @@ training_set[-17] = scale(training_set[-17])
 test_set[-17] = scale(test_set[-17])
 
 
-#library(e1071)
-classifier = svm(formula = y ~ .,#age*job*marital*education+device*day*month+time_spent*banner_views+banner_views_old+days_elapsed_old+outcome_old+X1*X2+X3+X4,
-                 data = training_set,
-                 type = 'C-classification',
-                 kernel = 'radial')
+library(randomForest)
+classifier = randomForest(x = training_set[-17],
+                          y = training_set$y, 
+                          ntree = 750)  
+
 
 # Predicting the Test set results
 y_pred = predict(classifier, newdata = test_set)

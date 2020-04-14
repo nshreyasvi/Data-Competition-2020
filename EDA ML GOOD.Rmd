@@ -1,6 +1,8 @@
 ---
-title: " ML EXPLORATORY DATA ANALYSIS EDA"
-output: html_notebook
+title: ' ML EXPLORATORY DATA ANALYSIS EDA'
+output:
+  html_document:
+    df_print: paged
 ---
 
 
