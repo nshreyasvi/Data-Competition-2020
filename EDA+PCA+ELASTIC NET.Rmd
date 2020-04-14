@@ -1,8 +1,6 @@
 ---
-title: ' ML EXPLORATORY DATA ANALYSIS EDA'
-output:
-  html_document:
-    df_print: paged
+title: " ML EXPLORATORY DATA ANALYSIS EDA"
+output: html_notebook
 ---
 
 
@@ -14,14 +12,60 @@ INCLUDE GGPLOT 2
 AND INCLUDE ESQUISSE
 https://towardsdatascience.com/top-r-libraries-for-data-science-9b24f658e243)
 
-
-
+First load libraries and preprocess the data
 ```{r}
-##install.packages("DataExplorer")
 
 library(tidyverse)
 library(DataExplorer)
+library(GGally)
+library(reshape)
 
+
+
+# Importing the dataset
+dataset = read.csv("C:/Users/trasa/Desktop/2020 2nd semester/Machine Learning/Contest/test.csv")
+
+#Numeric like variables
+dataset$age=as.numeric(as.factor(dataset$age))
+dataset$day=as.numeric(as.factor(dataset$day))
+dataset$month=as.numeric(as.factor(dataset$month))
+dataset$time_spent=as.numeric(as.factor(dataset$time_spent))
+dataset$banner_views=as.numeric(as.factor(dataset$banner_views))
+dataset$banner_views_old=as.numeric(as.factor(dataset$banner_views_old))
+dataset$days_elapsed_old=as.numeric(as.factor(dataset$days_elapsed_old))
+dataset$X1=as.numeric(as.factor(dataset$X1))
+dataset$X2=as.numeric(as.factor(dataset$X2))
+dataset$X3=as.numeric(as.factor(dataset$X3))
+dataset$X4=as.numeric(as.factor(dataset$X4))
+
+#Factor like columns
+dataset$job=as.numeric(as.factor(dataset$job))
+dataset$marital=as.numeric(as.factor(dataset$marital))
+dataset$education=as.numeric(as.factor(dataset$education))
+dataset$device=as.numeric(as.factor(dataset$device))
+dataset$outcome_old=as.numeric(as.factor(dataset$outcome_old))
+
+
+# Encoding the target feature as factor
+#dataset$y= factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+#install.packages('caTools')
+library(caTools)
+set.seed(123)
+?split()
+split = sample.split(dataset$y, SplitRatio =0.75)
+
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+```
+
+```{r}
 web<- dataset
 glimpse(web)
 #To go with glimpse(), DataExplorer itself has got a function called introduce()
@@ -156,39 +200,55 @@ library(glmnet)
 
 # Split the data into training and test set
 set.seed(123) 
-training.samples <- web %>%
-  createDataPartition(p = 0.8, list = FALSE)
-train.data  <-web[training.samples, ]
-test.data <- web[-training.samples, ]
-
-# Predictor variables
-x <- model.matrix(web~., train.data)[,-1]
-# Outcome variable
-y <- train.data$web
-
-set.seed(123)
-model <- train(
-  web ~., data = train.data, method = "glmnet",
-  trControl = trainControl("cv", number = 10),
-  tuneLength = 10
-)
-# Best tuning parameter
-model$bestTune
-
-# Coefficient of the final model. You need
-# to specify the best lambda
-coef(model$finalModel, model$bestTune$lambda)
-
-# Make predictions on the test data
-x.test <- model.matrix(web ~., test.data)[,-1]
-predictions <- model %>% predict(x.test)
-# Model performance metrics
-data.frame(
-  RMSE = RMSE(predictions, test.data$web),
-  Rsquare = R2(predictions, test.data$web)
-)
+dat<-web
+#  Extract  matrix  x  and  vector  y  from  data.frame  dat
+x  <-  as.matrix(dat[,  -1])
+y  <-  as.matrix(dat[,  1])
+#  Compute  grid  of  values  for  lambda
+grid  <-  10  ^  (seq(4,  -2,  length  =  61))
 
 
+
+#  Fit  ridge  regression
+fit.ridge  <-  glmnet(x,  y,  alpha  =  0,  lambda  =  grid,  standardize  =  TRUE)
+plot(fit.ridge,  xvar  =  "lambda")
+#  Perform  10-fold  cross-validation
+cv.ridge  <-  cv.glmnet(x,  y,  alpha  =  0,  lambda  =  grid,  standardize  =  TRUE)
+#  Plot  MSE  as  function  of  lambda
+plot(cv.ridge)
+#  Compute  the  optimal  lambda  using  the  one  standard  error  rule
+opt_lambda  <-  cv.ridge$lambda.1se;  log(opt_lambda)
+fit.lasso$
+#  Fit  lasso  regression
+fit.lasso  <-  glmnet(x,  y,  alpha  =  1,  lambda  =  grid,  standardize  =  TRUE)
+plot(fit.lasso,  xvar  =  "lambda")
+#  Perform  10-fold  cross-validation
+cv.lasso  <-  cv.glmnet(x,  y,  alpha  =  1,  lambda  =  grid,  standardize  =  TRUE)
+#  Plot  MSE  as  function  of  lambda
+plot(cv.lasso)
+#  Compute  the  optimal  lambda  using  the  one  standard 
+
+beta=coef(fit.lasso)
+
+tmp <- as.data.frame(as.matrix(beta))
+tmp$coef <- row.names(tmp)
+tmp <- reshape::melt(tmp, id = "coef")
+tmp$variable <- as.numeric(gsub("s", "", tmp$variable))
+tmp$lambda <- fit.lasso$lambda[tmp$variable+1] # extract the lambda values
+tmp$norm <- apply(abs(beta[-1,]), 2, sum)[tmp$variable+1] # compute L1 norm
+
+
+
+ggplot(tmp[tmp$coef != "(Intercept)",], aes(lambda, value, color = coef, linetype = coef)) + 
+    geom_line() + 
+    scale_x_log10() + 
+    xlab("Lambda (log scale)") + 
+    guides(color = guide_legend(title = ""), 
+           linetype = guide_legend(title = "")) +
+    theme_bw() + 
+    theme(legend.key.width = unit(3,"lines"))
+
+#keep device,marital,time spent, education,age, outcome old, months
 ```
 
 
