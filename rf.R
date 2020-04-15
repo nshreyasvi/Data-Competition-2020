@@ -38,7 +38,7 @@ test_set = subset(dataset, split == FALSE)
 
 library(randomForest)
 classifier = randomForest(x = training_set[-17],
-                          y = training_set$y)#, ntree = 500)  
+                          y = training_set$y)         #, ntree = 500)  
 
 
 # Predicting the Test set results
