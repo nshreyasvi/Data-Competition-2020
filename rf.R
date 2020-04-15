@@ -6,11 +6,10 @@ rm(list=ls())
 dataset = read.csv('train.csv')
 
 #Changing the data
-#dataset$age<-sqrt(dataset$age)
-#dataset$time_spent<-sqrt(dataset$time_spent)
-
 dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset[ dataset == "na" ] <- NA
+dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
+dataset$outcome_old[dataset$outcome_old == "failure"] <- NA
 
 #Factor like columns
 dataset$job=as.integer(as.factor(dataset$job))
@@ -20,6 +19,8 @@ dataset$device=as.integer(as.factor(dataset$device))
 dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 dataset[is.na(dataset)] <- 0
 
+
+dataset$outcome_old[dataset$outcome_old == 4] <- 1
 #Removing variabes with less dependency
 #dataset<-dataset[,c("device","marital","time_spent", "education","age", "outcome_old", "month","y")]
 
@@ -54,5 +55,5 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
-#accuracy ~ 86.63%
+#accuracy ~ 86.68%
 
