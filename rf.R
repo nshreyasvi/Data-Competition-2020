@@ -19,8 +19,12 @@ dataset$device=as.integer(as.factor(dataset$device))
 dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 dataset[is.na(dataset)] <- 0
 
-
+#changing outcome to levels 1 and 0
 dataset$outcome_old[dataset$outcome_old == 4] <- 1
+
+#Changing device to 0, 1 and 2
+dataset$device[dataset$device == 3] <- 2
+
 #Removing variabes with less dependency
 #dataset<-dataset[,c("device","marital","time_spent", "education","age", "outcome_old", "month","y")]
 
@@ -55,5 +59,5 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
-#accuracy ~ 86.68%
+#accuracy ~ 86.68%, balanced accuracy ~ 86.24%
 

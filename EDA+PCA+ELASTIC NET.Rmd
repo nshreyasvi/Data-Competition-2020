@@ -45,6 +45,10 @@ dataset$outcome_old=as.numeric(as.factor(dataset$outcome_old))
 
 #Converting 4 to 1 in outcome_old
 dataset$outcome_old[dataset$outcome_old == 4] <- 1
+
+#changing device to 3 levels (1, 2 and 0)
+dataset$device[dataset$device == 3] <- 2
+
 ```
 
 ```{r}
