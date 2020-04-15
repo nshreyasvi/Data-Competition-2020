@@ -38,8 +38,7 @@ test_set = subset(dataset, split == FALSE)
 
 library(randomForest)
 classifier = randomForest(x = training_set[-17],
-                          y = training_set$y, 
-                          ntree = 550)  
+                          y = training_set$y)#, ntree = 500)  
 
 
 # Predicting the Test set results
@@ -55,4 +54,5 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
-#accuracy ~ 86.59%
+#accuracy ~ 86.63%
+

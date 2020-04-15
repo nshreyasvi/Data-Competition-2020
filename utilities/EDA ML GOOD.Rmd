@@ -1,0 +1,187 @@
+---
+title: ' ML EXPLORATORY DATA ANALYSIS EDA'
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+TO DO/ADD:
+(https://towardsdatascience.com/exploratory-data-analysis-in-r-for-beginners-fe031add7072
+INCLUDE GGPLOT 2
+
+AND INCLUDE ESQUISSE
+https://towardsdatascience.com/top-r-libraries-for-data-science-9b24f658e243)
+
+
+
+```{r}
+##install.packages("DataExplorer")
+
+library(tidyverse)
+library(DataExplorer)
+
+#Replacing na string with NA
+dataset = read.csv('train.csv')
+
+dataset[ dataset == "na" ] <- NA
+dataset[is.na(dataset)] <- 0
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+
+
+web<- dataset
+glimpse(web)
+#To go with glimpse(), DataExplorer itself has got a function called introduce()
+introduce(web)
+
+#The same introduce() could also be plotted in a pretty graph.
+plot_intro(web,  ggtheme = theme_dark(),
+             title = "EDA with Data Explorer",
+             )
+```
+
+
+EDA – Missing
+```{r}
+plot_missing(web,  
+             ggtheme = theme_dark(),
+             title = " Features missing from the whole observations",
+             )
+```
+
+EDA for Continuous
+```{r}
+##for univariate
+
+DataExplorer::plot_histogram(web,  
+             ggtheme = theme_dark(),
+             title = " Histogram of continuous features",
+             )
+
+plot_density(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             )  # age, time_spent, X4 are right skewed
+#outcome old hase a mode which is na-> remove this category? or remove this variable??
+
+plot_bar(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             )  ##VISUALIZE DATA WHEN X2=0 AND =1 (subsetting)
+
+                    
+                    a<- filter(web, web$X1==0)
+                    b<- filter(web, web$X1==1)
+                    plot_bar(a)
+                    plot_bar(b)
+                    plot_density(a,
+                                 title = " a")
+                    plot_density(b,
+                                 title = " b") # => we see that when X1=2 there is more noise and                                                      variation in y output
+
+##for bivariate
+  plot_boxplot(web, by= 'day' , ncol = 1,   
+             ggtheme = theme_dark(),
+             title = " Boxplot of continuous features by day",
+             )
+
+##autocorr plot
+plot_correlation(web, cor_args = list( 'use' = 'complete.obs'),  
+             ggtheme = theme_dark(),
+             title = " Autocorr Plot",
+             )
+
+##continurous correlation plot
+plot_correlation(web, type = 'c',cor_args = list( 'use' = 'complete.obs'),  
+             ggtheme = theme_dark(),
+             title = " Continuous corr Plot",
+             )   #marital and age negative correlation/ edu and job pos corr/ pos corr outcomr old and banner old, days old and banners old, y and outcome old
+
+```
+
+
+EDA for Categorical
+```{r}
+plot_bar(a, maxcat = 390, parallel = FALSE,  
+             ggtheme = theme_dark(),
+             title = " Categorical Features Plot",
+             )
+```
+
+
+Correction
+```{r}
+web<- dataset
+
+web$age<-sqrt(web$age)
+web$time_spent<-sqrt(sqrt(web$time_spent))
+ # age, time_spent are right skewed
+plot_density(web,  
+             ggtheme = theme_dark(),
+             title = " Density of continuous features",
+             ) 
+dataset<-web
+
+```
+
+
+
+EDA Report
+```{r}
+create_report(
+  web,
+  output_file = "EDA report.html",
+  output_dir = getwd(),
+  y = NULL,
+  config = configure_report(),
+  report_title = "Exploratory Data Analysis Report")
+##getwd()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
