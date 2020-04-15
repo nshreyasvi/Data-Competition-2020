@@ -5,22 +5,9 @@ rm(list=ls())
 # Importing the dataset
 dataset = read.csv('train.csv')
 
-#Numeric like variables
-dataset$age=as.numeric(as.factor(dataset$age))
-dataset$day=as.numeric(as.factor(dataset$day))
-dataset$month=as.numeric(as.factor(dataset$month))
-dataset$time_spent=as.numeric(as.factor(dataset$time_spent))
-dataset$banner_views=as.numeric(as.factor(dataset$banner_views))
-dataset$banner_views_old=as.numeric(as.factor(dataset$banner_views_old))
-dataset$days_elapsed_old=as.numeric(as.factor(dataset$days_elapsed_old))
-dataset$X1=as.numeric(as.factor(dataset$X1))
-dataset$X2=as.numeric(as.factor(dataset$X2))
-dataset$X3=as.numeric(as.factor(dataset$X3))
-dataset$X4=as.numeric(as.factor(dataset$X4))
-
 #Changing the data
-dataset$age<-sqrt(dataset$age)
-dataset$time_spent<-sqrt(dataset$time_spent)
+#dataset$age<-sqrt(dataset$age)
+#dataset$time_spent<-sqrt(dataset$time_spent)
 
 dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset[ dataset == "na" ] <- NA
@@ -68,3 +55,4 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
+#accuracy ~ 86.59%
