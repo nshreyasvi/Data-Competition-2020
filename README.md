@@ -4,7 +4,7 @@
     - Removed lines which convert numeric to factor and then again to numeric (e.g. dataset$age=as.numeric(as.factor(dataset$age)))
     - Removed na strings to NaN (NA) and then to 0
     - Changed days_elapsed_old (-1 to 0)
-
+- Added svm-8663 file which is random forest getting around 86.63 percent accuracy. However prediction accuracy is poor due to overfitting.
 - Added EDA+PCA  -> elastic net in progress (variable selection)
 
 ## To Do
