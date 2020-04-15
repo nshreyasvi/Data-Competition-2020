@@ -32,6 +32,10 @@ dataset[is.na(dataset)] <- 0
 #People who never saw ad in old campaign (kept as -1 --> changed to 0)
 dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 
+#Converting 4 levels in outcome_old to 2 outcomes (success/failure)
+dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
+dataset$outcome_old[dataset$outcome_old == "failure"] <- NA
+
 #Factor like columns
 dataset$job=as.numeric(as.factor(dataset$job))
 dataset$marital=as.numeric(as.factor(dataset$marital))
@@ -39,6 +43,8 @@ dataset$education=as.numeric(as.factor(dataset$education))
 dataset$device=as.numeric(as.factor(dataset$device))
 dataset$outcome_old=as.numeric(as.factor(dataset$outcome_old))
 
+#Converting 4 to 1 in outcome_old
+dataset$outcome_old[dataset$outcome_old == 4] <- 1
 ```
 
 ```{r}
