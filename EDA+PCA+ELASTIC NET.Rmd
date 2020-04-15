@@ -1,6 +1,8 @@
 ---
-title: " ML EXPLORATORY DATA ANALYSIS EDA"
-output: html_notebook
+title: ' ML EXPLORATORY DATA ANALYSIS EDA'
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -21,7 +23,7 @@ library(GGally)
 library(reshape)
 
 # Importing the dataset
-dataset = read.csv("C:/Users/trasa/Desktop/2020 2nd semester/Machine Learning/Contest/test.csv")
+dataset = read.csv("train.csv")
 
 #Removing strings na with NA and later on 0
 dataset[ dataset == "na" ] <- NA
@@ -36,24 +38,6 @@ dataset$marital=as.numeric(as.factor(dataset$marital))
 dataset$education=as.numeric(as.factor(dataset$education))
 dataset$device=as.numeric(as.factor(dataset$device))
 dataset$outcome_old=as.numeric(as.factor(dataset$outcome_old))
-
-
-# Encoding the target feature as factor
-#dataset$y= factor(dataset$y, levels = c(0, 1))
-
-# Splitting the dataset into the Training set and Test set
-#install.packages('caTools')
-library(caTools)
-set.seed(123)
-?split()
-split = sample.split(dataset$y, SplitRatio =0.75)
-
-training_set = subset(dataset, split == TRUE)
-test_set = subset(dataset, split == FALSE)
-
-# Feature Scaling
-training_set[-17] = scale(training_set[-17])
-test_set[-17] = scale(test_set[-17])
 
 ```
 
@@ -81,7 +65,6 @@ plot_missing(web,
 EDA for Continuous
 ```{r}
 ##for univariate
-?DataExplorer()
 
 DataExplorer::plot_histogram(web,  
              ggtheme = theme_dark(),
@@ -114,7 +97,6 @@ plot_bar(web,
              ggtheme = theme_dark(),
              title = " Boxplot of continuous features by day",
              )
-  ?plot_boxplot()
 
 ##autocorr plot
 plot_correlation(web, cor_args = list( 'use' = 'complete.obs'),  
@@ -162,20 +144,20 @@ You need to consider only numerical data, so leaving out: job, marital, educatio
 ```{r}
 
 library(devtools)
-install_github("vqv/ggbiplot")
-library(ggbiplot)
+#install_github("vqv/ggbiplot")
+library(ggplot2)
 
-str(web)
+#str(web)
 web.pca <- prcomp(web, center = TRUE, scale. = TRUE)
 
 summary(web.pca)
 
 str(web.pca)
 
-ggbiplot(web.pca)
-ggbiplot(web.pca, labels=rownames(web)) #PCA 1,2 -> banner view old and day elapsed old (positive impact), banners views, education, age have also impact on PCA 1 and 2) 
-ggbiplot(web.pca,ellipse=TRUE,choices=c(2,3),   labels=rownames(web)) #PCA 2,3 ->confirms last plot, with also marital impact
-ggbiplot(web.pca,ellipse=TRUE,choices=c(3,4),   labels=rownames(web)) #PCA 3 and 4 -> time spent
+ggplot(web.pca)
+ggplot(web.pca, labels=rownames(web)) #PCA 1,2 -> banner view old and day elapsed old (positive impact), banners views, education, age have also impact on PCA 1 and 2) 
+ggplot(web.pca,ellipse=TRUE,choices=c(2,3),   labels=rownames(web)) #PCA 2,3 ->confirms last plot, with also marital impact
+ggplot(web.pca,ellipse=TRUE,choices=c(3,4),   labels=rownames(web)) #PCA 3 and 4 -> time spent
 
 #webs.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
 #ggbiplot(web.pca,ellipse=TRUE,  labels=rownames(web$age), groups = web.country)
@@ -186,6 +168,8 @@ ggbiplot(web.pca,ellipse=TRUE,choices=c(3,4),   labels=rownames(web)) #PCA 3 and
 
 Lasso & Ridge(to finish)
 ```{r}
+#install.packages("backports")
+#install.packages("tidyverse")
 library(tidyverse)
 library(caret)
 library(glmnet)
