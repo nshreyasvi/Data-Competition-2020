@@ -9,7 +9,7 @@ dataset = read.csv('train.csv')
 dataset$age<-sqrt(dataset$age)
 #dataset$time_spent<-sqrt(sqrt(dataset$time_spent))
 
-#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset[ dataset == "na" ] <- NA
 
 #Factor like columns
@@ -35,14 +35,14 @@ training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)
 
 # Feature Scaling #for higher resolution visualisation only we are using feature scaling,RF doesnt need feature scaling
-training_set[-14] = scale(training_set[-14])
-test_set[-14] = scale(test_set[-14])
+#training_set[-14] = scale(training_set[-14])
+#test_set[-14] = scale(test_set[-14])
 
 
 library(randomForest)
 classifier = randomForest(x = training_set[-14],
                           y = training_set$y, 
-                          ntree = 5000)  
+                          ntree = 1000)  
 
 
 # Predicting the Test set results
