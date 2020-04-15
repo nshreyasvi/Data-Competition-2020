@@ -4,20 +4,13 @@ rm(list=ls())
 
 # Importing the dataset
 dataset = read.csv('train.csv')
-dataset_1 = read.csv('test.csv')
 
 #Changing the data
-dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset$age<-sqrt(dataset$age)
+#dataset$time_spent<-sqrt(sqrt(dataset$time_spent))
+
+#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset[ dataset == "na" ] <- NA
-
-dataset_1$days_elapsed_old[dataset_1$days_elapsed_old<1] <- 0
-dataset_1[ dataset_1 == "na" ] <- NA
-
-#Plotting to check outliers
-summary(dataset)
-
-#dataset$age=sqrt(dataset$age)
-#dataset$time_spent=sqrt(dataset$age)
 
 #Factor like columns
 dataset$job=as.integer(as.factor(dataset$job))
@@ -27,16 +20,8 @@ dataset$device=as.integer(as.factor(dataset$device))
 dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 dataset[is.na(dataset)] <- 0
 
-dataset_1$job=as.integer(as.factor(dataset_1$job))
-dataset_1$marital=as.integer(as.factor(dataset_1$marital))
-dataset_1$education=as.integer(as.factor(dataset_1$education))
-dataset_1$device=as.integer(as.factor(dataset_1$device))
-dataset_1$outcome_old=as.integer(as.factor(dataset_1$outcome_old))
-dataset_1[is.na(dataset_1)] <- 0
-
-
 #Removing variabes with less dependency
-#dataset<-dataset[,c("age","banner_views","banner_views_old","day","days_elapsed_old","month","time_spent","X4")]
+dataset<-dataset[,c("banner_views_old","days_elapsed_old", "banner_views", "education","outcome_old","device","marital","day","X1","X2","X3","X4","time_spent","y")]
 
 # Encoding the target feature as factor
 dataset$y = factor(dataset$y, levels = c(0, 1))
@@ -49,27 +34,23 @@ split = sample.split(dataset$y, SplitRatio = 0.75)
 training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)
 
-dataset_1[-17] = scale(dataset_1[-17])
 # Feature Scaling #for higher resolution visualisation only we are using feature scaling,RF doesnt need feature scaling
-training_set[-17] = scale(training_set[-17])
-test_set[-17] = scale(test_set[-17])
+training_set[-14] = scale(training_set[-14])
+test_set[-14] = scale(test_set[-14])
 
 
 library(randomForest)
-classifier = randomForest(x = training_set[-17],
+classifier = randomForest(x = training_set[-14],
                           y = training_set$y, 
-                          ntree = 750)  
+                          ntree = 5000)  
 
 
 # Predicting the Test set results
-y_pred = predict(classifier, newdata = dataset_1)
+y_pred = predict(classifier, newdata = test_set)
 y_pred
 
-write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
-
 # Making the Confusion Matrix
-#cm = table(dataset_1, y_pred)
-cm = table(test_set[,17], y_pred)
+cm = table(test_set[,14], y_pred)
 cm
 print("=====================================Random Forest=====================================")
 library(ggplot2)

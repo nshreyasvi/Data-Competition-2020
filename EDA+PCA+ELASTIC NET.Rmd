@@ -20,23 +20,15 @@ library(DataExplorer)
 library(GGally)
 library(reshape)
 
-
-
 # Importing the dataset
 dataset = read.csv("C:/Users/trasa/Desktop/2020 2nd semester/Machine Learning/Contest/test.csv")
 
-#Numeric like variables
-dataset$age=as.numeric(as.factor(dataset$age))
-dataset$day=as.numeric(as.factor(dataset$day))
-dataset$month=as.numeric(as.factor(dataset$month))
-dataset$time_spent=as.numeric(as.factor(dataset$time_spent))
-dataset$banner_views=as.numeric(as.factor(dataset$banner_views))
-dataset$banner_views_old=as.numeric(as.factor(dataset$banner_views_old))
-dataset$days_elapsed_old=as.numeric(as.factor(dataset$days_elapsed_old))
-dataset$X1=as.numeric(as.factor(dataset$X1))
-dataset$X2=as.numeric(as.factor(dataset$X2))
-dataset$X3=as.numeric(as.factor(dataset$X3))
-dataset$X4=as.numeric(as.factor(dataset$X4))
+#Removing strings na with NA and later on 0
+dataset[ dataset == "na" ] <- NA
+dataset[is.na(dataset)] <- 0
+
+#People who never saw ad in old campaign (kept as -1 --> changed to 0)
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 
 #Factor like columns
 dataset$job=as.numeric(as.factor(dataset$job))
@@ -108,8 +100,8 @@ plot_bar(web,
              )  ##VISUALIZE DATA WHEN X2=1 AND =2 (subsetting)
 
                     
-                    a<- filter(web, web$X1==1)
-                    b<- filter(web, web$X1==2)
+                    a<- filter(web, web$X1==0)
+                    b<- filter(web, web$X1==1)
                     plot_bar(a)
                     plot_bar(b)
                     plot_density(a,

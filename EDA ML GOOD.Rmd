@@ -24,8 +24,11 @@ library(DataExplorer)
 
 #Replacing na string with NA
 dataset = read.csv('train.csv')
-dataset[ dataset == "na" ] <- NA
 
+dataset[ dataset == "na" ] <- NA
+dataset[is.na(dataset)] <- 0
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset$job=as.integer(as.factor(dataset$job))
 dataset$marital=as.integer(as.factor(dataset$marital))
 dataset$education=as.integer(as.factor(dataset$education))
