@@ -22,20 +22,9 @@ https://towardsdatascience.com/top-r-libraries-for-data-science-9b24f658e243)
 library(tidyverse)
 library(DataExplorer)
 
+#Replacing na string with NA
 dataset = read.csv('train.csv')
-
-dataset$age=as.numeric(as.factor(dataset$age))
-dataset$day=as.numeric(as.factor(dataset$day))
-dataset$month=as.numeric(as.factor(dataset$month))
-dataset$time_spent=as.numeric(as.factor(dataset$time_spent))
-dataset$banner_views=as.numeric(as.factor(dataset$banner_views))
-dataset$banner_views_old=as.numeric(as.factor(dataset$banner_views_old))
-dataset$days_elapsed_old=as.numeric(as.factor(dataset$days_elapsed_old))
-dataset$X1=as.numeric(as.factor(dataset$X1))
-dataset$X2=as.numeric(as.factor(dataset$X2))
-dataset$X3=as.numeric(as.factor(dataset$X3))
-dataset$X4=as.numeric(as.factor(dataset$X4))
-
+dataset[ dataset == "na" ] <- NA
 
 dataset$job=as.integer(as.factor(dataset$job))
 dataset$marital=as.integer(as.factor(dataset$marital))
@@ -82,11 +71,11 @@ plot_density(web,
 plot_bar(web,  
              ggtheme = theme_dark(),
              title = " Density of continuous features",
-             )  ##VISUALIZE DATA WHEN X2=1 AND =2 (subsetting)
+             )  ##VISUALIZE DATA WHEN X2=0 AND =1 (subsetting)
 
                     
-                    a<- filter(web, web$X1==1)
-                    b<- filter(web, web$X1==2)
+                    a<- filter(web, web$X1==0)
+                    b<- filter(web, web$X1==1)
                     plot_bar(a)
                     plot_bar(b)
                     plot_density(a,
@@ -152,4 +141,44 @@ create_report(
   report_title = "Exploratory Data Analysis Report")
 ##getwd()
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
