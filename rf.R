@@ -5,31 +5,41 @@ rm(list=ls())
 # Importing the dataset
 dataset = read.csv('train.csv')
 
+summary(dataset)
+plot(dataset$days_elapsed_old)
 
-levels(dataset$job)
+#Convert age to categorical variable
+
+levels(dataset$education)
+
+summary(lm(dataset$y~dataset$days_elapsed_old))
+#important ones --> student, retired, unemployed
 
 #Changing the data
-dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
-dataset[ dataset == "na" ] <- NA
+#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+levels(dataset$education)
 dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
-dataset$outcome_old[dataset$outcome_old == "failure"] <- NA
+dataset$outcome_old[dataset$outcome_old == "failure"] <- "na"
 dataset$marital[dataset$marital == "divorced"] <- "single"
 
 #Testing these
-#dataset$job[dataset$job == "industrial_worker"] <-"salesman"
-#dataset$job[dataset$job == "salesman"] <-"manager"
-#dataset$job[dataset$job == "manager"] <-"technology"
-#dataset$job[dataset$job == "technology"] <- "teacher"
-#dataset$job[dataset$job == "entrepreneur"] <- "teacher"
+dataset$job[dataset$job == "salesman"] <- "industrial_worker"
+dataset$job[dataset$job == "industrial_worker"] <- "housekeeper"
+dataset$job[dataset$job == "industrial_worker"] <- "na"
 
 
-#dataset$job[dataset$job == "unemployed"] <- NA
-#dataset$job[dataset$job == "retired"] <- NA
-#dataset$job[dataset$job == "housekeeper"] <- NA
-#dataset$job[dataset$job == "student"] <-NA
-#dataset$job[dataset$job == "freelance"] <-NA
-#dataset$job[dataset$job == "entrepreneur"] <-NA
+dataset$job[dataset$job == "high_school"] <- "university"
+dataset$job[dataset$job == "university"] <- "na"
 
+dataset$job[dataset$job == "desktop"] <- "na"
+
+#Trying to check if the days_elapsed_old can be changed to categorical for better results
+dataset$days_elapsed_old[dataset$days_elapsed_old <= 50] <- 0
+dataset$days_elapsed_old[dataset$days_elapsed_old >= 50 & dataset$days_elapsed_old<=150] <- 1
+dataset$days_elapsed_old[dataset$days_elapsed_old >= 150 & dataset$days_elapsed_old<=250 ] <- 2
+dataset$days_elapsed_old[dataset$days_elapsed_old >= 250] <- 0
+
+dataset[ dataset == "na" ] <- NA
 
 #Factor like columns
 dataset$job=as.integer(as.factor(dataset$job))
@@ -38,12 +48,6 @@ dataset$education=as.integer(as.factor(dataset$education))
 dataset$device=as.integer(as.factor(dataset$device))
 dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
 dataset[is.na(dataset)] <- 0
-
-#changing outcome to levels 1 and 0
-dataset$outcome_old[dataset$outcome_old == 4] <- 1
-
-#Changing device to 0, 1 and 2
-dataset$device[dataset$device == 3] <- 2
 
 summary(dataset)
 
@@ -78,5 +82,5 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
-#accuracy ~ 86.82%, balanced accuracy ~ 86.38
+#accuracy ~ 86.87%, balanced accuracy ~ 86.42
 
