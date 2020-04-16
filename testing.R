@@ -52,7 +52,7 @@ dataset$y = factor(dataset$y, levels = c(0, 1))
 # install.packages('caTools')
 library(caTools)
 set.seed(123)
-split = sample.split(dataset$y, SplitRatio = 0.75)
+split = sample.split(dataset$y, SplitRatio = 0.85)
 training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)
 
