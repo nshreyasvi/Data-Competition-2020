@@ -7,7 +7,7 @@
     - Merged 'failure' and 'other' field and converted all of them to NaN
     - Merged 'divorced' into 'single' and made it into 2 columns (single/divorced and married)
 
-- **Changing and merging the columns which are similar i.e. in the outcome_old field, I changed its 4 levels (success, failure, na, other) into 2 factor levels (success and failure, replacing the failure and other values into all NaN (increased accuracy from 86.3% to 86.63%) and in marital field, I changed single, divorced and married I merged the single and divorced based on the fact that they are both sort of single) ---> increased accuracy 86.63% to 86.82% in random forest (training)**
+- **Changing and merging the columns which are similar i.e. in the outcome_old field, I changed its 4 levels (success, failure, na, other) into 2 factor levels (success and failure, replacing the failure and other values into all NaN (increased accuracy from 86.3% to 86.63%) and in marital field, I changed single, divorced and married I merged the single and divorced based on the fact that they are both sort of single) ---> increased accuracy 86.63% to 86.82% in training**
 
 - **Please try to find a possible way to reduce the job field which will be the step that could help us achieve more than 88% accuracy.**
 
