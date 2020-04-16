@@ -5,11 +5,31 @@ rm(list=ls())
 # Importing the dataset
 dataset = read.csv('train.csv')
 
+
+levels(dataset$job)
+
 #Changing the data
 dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset[ dataset == "na" ] <- NA
 dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
 dataset$outcome_old[dataset$outcome_old == "failure"] <- NA
+dataset$marital[dataset$marital == "divorced"] <- "single"
+
+#Testing these
+#dataset$job[dataset$job == "industrial_worker"] <-"salesman"
+#dataset$job[dataset$job == "salesman"] <-"manager"
+#dataset$job[dataset$job == "manager"] <-"technology"
+#dataset$job[dataset$job == "technology"] <- "teacher"
+#dataset$job[dataset$job == "entrepreneur"] <- "teacher"
+
+
+#dataset$job[dataset$job == "unemployed"] <- NA
+#dataset$job[dataset$job == "retired"] <- NA
+#dataset$job[dataset$job == "housekeeper"] <- NA
+#dataset$job[dataset$job == "student"] <-NA
+#dataset$job[dataset$job == "freelance"] <-NA
+#dataset$job[dataset$job == "entrepreneur"] <-NA
+
 
 #Factor like columns
 dataset$job=as.integer(as.factor(dataset$job))
@@ -26,8 +46,6 @@ dataset$outcome_old[dataset$outcome_old == 4] <- 1
 dataset$device[dataset$device == 3] <- 2
 
 summary(dataset)
-#Removing variabes with less dependency
-#dataset<-dataset[,c("device","marital","time_spent", "education","age", "outcome_old", "month","y")]
 
 # Encoding the target feature as factor
 dataset$y = factor(dataset$y, levels = c(0, 1))
@@ -60,5 +78,5 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 
-#accuracy ~ 86.68%, balanced accuracy ~ 86.24
+#accuracy ~ 86.82%, balanced accuracy ~ 86.38
 
