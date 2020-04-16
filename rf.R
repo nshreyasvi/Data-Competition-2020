@@ -34,10 +34,10 @@ dataset$job[dataset$job == "university"] <- "na"
 dataset$job[dataset$job == "desktop"] <- "na"
 
 #Trying to check if the days_elapsed_old can be changed to categorical for better results
-dataset$days_elapsed_old[dataset$days_elapsed_old <= 50] <- 0
-dataset$days_elapsed_old[dataset$days_elapsed_old >= 50 & dataset$days_elapsed_old<=150] <- 1
-dataset$days_elapsed_old[dataset$days_elapsed_old >= 150 & dataset$days_elapsed_old<=250 ] <- 2
-dataset$days_elapsed_old[dataset$days_elapsed_old >= 250] <- 0
+#dataset$days_elapsed_old[dataset$days_elapsed_old <= 50] <- 0
+#dataset$days_elapsed_old[dataset$days_elapsed_old >= 50 & dataset$days_elapsed_old<=150] <- 1
+#dataset$days_elapsed_old[dataset$days_elapsed_old >= 150 & dataset$days_elapsed_old<=250 ] <- 2
+#dataset$days_elapsed_old[dataset$days_elapsed_old >= 250] <- 0
 
 dataset[ dataset == "na" ] <- NA
 

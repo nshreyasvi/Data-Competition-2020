@@ -9,6 +9,8 @@
 
 - **Changing and merging the columns which are similar i.e. in the outcome_old field, I changed its 4 levels (success, failure, na, other) into 2 factor levels (success and failure, replacing the failure and other values into all NaN (increased accuracy from 86.3% to 86.63%) and in marital field, I changed single, divorced and married I merged the single and divorced based on the fact that they are both sort of single) ---> increased accuracy 86.63% to 86.82% in training**
 
+- Trying to check if the days_elapsed_old can be changed to categorical for better results (same might be possible for other things for better fitting)
+
 - **Please try to find a possible way to reduce the job field which will be the step that could help us achieve more than 88% accuracy.**
 
 - Added rf.R file which is random forest getting around 86.82 percent accuracy. However prediction accuracy is not known, this is just a filtered version of the train.csv file used for training.
