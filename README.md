@@ -1,11 +1,6 @@
 # ml_2020
 ## Updates
-- Bugs with the dataset
-    - Removed lines which convert numeric to factor and then again to numeric (e.g. dataset$age=as.numeric(as.factor(dataset$age)))
-    - Removed na strings to NaN (NA) and then to 0
-    - Changed days_elapsed_old (-1 to 0)
-    - Merged 'failure' and 'other' field and converted all of them to NaN
-    - Merged 'divorced' into 'single' and made it into 2 columns (single/divorced and married)
+-Big problem of 8000 missing values-> resolved by implementing 3 different algor(not taking binary into account or scaling them?? IDK)
 
 - **Changing and merging the columns which are similar i.e. in the outcome_old field, I changed its 4 levels (success, failure, na, other) into 2 factor levels (success and failure, replacing the failure and other values into all NaN (increased accuracy from 86.3% to 86.63%) and in marital field, I changed single, divorced and married I merged the single and divorced based on the fact that they are both sort of single) ---> increased accuracy 86.63% to 86.82% in training**
 
