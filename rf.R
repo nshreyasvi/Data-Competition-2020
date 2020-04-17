@@ -5,16 +5,6 @@ rm(list=ls())
 # Importing the dataset
 dataset = read.csv('train.csv')
 
-summary(dataset)
-plot(dataset$days_elapsed_old)
-
-#Convert age to categorical variable
-
-levels(dataset$education)
-
-summary(lm(dataset$y~dataset$days_elapsed_old))
-#important ones --> student, retired, unemployed
-
 #Changing the data
 #dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 levels(dataset$education)
@@ -33,20 +23,14 @@ dataset$job[dataset$job == "university"] <- "na"
 
 dataset$job[dataset$job == "desktop"] <- "na"
 
-#Trying to check if the days_elapsed_old can be changed to categorical for better results
-#dataset$days_elapsed_old[dataset$days_elapsed_old <= 50] <- 0
-#dataset$days_elapsed_old[dataset$days_elapsed_old >= 50 & dataset$days_elapsed_old<=150] <- 1
-#dataset$days_elapsed_old[dataset$days_elapsed_old >= 150 & dataset$days_elapsed_old<=250 ] <- 2
-#dataset$days_elapsed_old[dataset$days_elapsed_old >= 250] <- 0
-
 dataset[ dataset == "na" ] <- NA
 
 #Factor like columns
-dataset$job=as.integer(as.factor(dataset$job))
-dataset$marital=as.integer(as.factor(dataset$marital))
-dataset$education=as.integer(as.factor(dataset$education))
-dataset$device=as.integer(as.factor(dataset$device))
-dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset$job=as.integer(dataset$job)
+dataset$marital=as.integer(dataset$marital)
+dataset$education=as.integer(dataset$education)
+dataset$device=as.integer(dataset$device)
+dataset$outcome_old=as.integer(dataset$outcome_old)
 dataset[is.na(dataset)] <- 0
 
 summary(dataset)
@@ -56,6 +40,7 @@ dataset$y = factor(dataset$y, levels = c(0, 1))
 
 # Splitting the dataset into the Training set and Test set
 # install.packages('caTools')
+
 library(caTools)
 set.seed(123)
 split = sample.split(dataset$y, SplitRatio = 0.75)
