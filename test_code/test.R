@@ -57,7 +57,7 @@ ziptrain[ ziptrain == "na" ] <- NA
 
 set.seed(222)
 
-ziptrain.imputed <- rfImpute(y~.,ziptrain)
+#ziptrain.imputed <- rfImpute(y~.,ziptrain)
 summary(ziptrain.imputed)
 
 idx.val <- sample(1:nrow(ziptrain),2000,replace=FALSE)
@@ -424,3 +424,31 @@ pred_ridge.tr <- predict(ridge.cv,newx=as.matrix(ziptrain[,-17]),type='class')
 
 1-mean(!(predict(ridge.cv,newx = as.matrix(ziptrain[,-17]),type='class')==
          ziptrain$y))
+#===============================================================================================
+#Changing into LDA QDA
+rm(list=ls())
+library(tidyverse)
+library(MASS)
+classSim<-read.csv('train.csv')
+classSim$y <-as_factor(classSim$y)
+
+split = sample.split(classSim$y, SplitRatio = 0.75)
+training_set = subset(classSim, split == TRUE)
+test_set = subset(classSim, split == FALSE)
+
+#change to lda() for linear qda() for quadratic
+lda_fit <- lda(y~.,training_set)
+qda_fit <- qda(y~.,training_set)
+
+lda_pred <- predict(lda_fit,newdata=test_set)
+qda_pred <- predict(lda_fit,newdata=test_set)
+
+lda_cm = table(test_set[,17], lda_pred$class)
+qda_cm = table(test_set[,17], qda_pred$class)
+
+print("=====================================Random Forest=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(lda_cm)
+confusionMatrix(qda_cm)

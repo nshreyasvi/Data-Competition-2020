@@ -22,7 +22,7 @@ ziptest = subset(dataset, split == FALSE)
 library(glmnet)
 
 ridge.fit <- glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
-                    family='binomial',alpha=1)
+                    family='binomial',alpha=0.5)
 
 plot(ridge.fit,xvar='lambda',label=TRUE)
 
@@ -44,7 +44,7 @@ lines(log(ridge.fit$lambda),ridge.test,col='red')
 lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
 
 ridge.cv <- cv.glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
-                      family='binomial',alpha=1,nfolds=5)
+                      family='binomial',alpha=0.5,nfolds=5)
 plot(ridge.cv)
 
 #Running on the best lambda found
@@ -82,7 +82,7 @@ x_test<-model.matrix(y~.,ziptest)[,-17]
 
 #Ridge and Lasso 
 ridge.fit <- glmnet(x=x_train,y=ziptrain[,17],
-                    family='binomial',alpha=1)#,lambda = ridge.cv$lambda.min)
+                    family='binomial',alpha=0.5)#,lambda = ridge.cv$lambda.min)
 
 plot(ridge.fit,xvar='lambda',label=TRUE)
 
@@ -104,7 +104,7 @@ lines(log(ridge.fit$lambda),ridge.test,col='red')
 lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
 
 ridge.cv <- cv.glmnet(x=x_train,y=ziptrain[,17],
-                      family='binomial',alpha=1,nfolds=5)
+                      family='binomial',alpha=0.5,nfolds=10)
 plot(ridge.cv)
 
 #Running on the best lambda found
@@ -115,18 +115,23 @@ ridge_coeffs <- coef(ridge.cv, s="lambda.min")
 pred_ridge.te <- predict(ridge.cv,newx=x_test,type='class')
 pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 
+
+
 1-mean(!(predict(ridge.cv,newx = x_test,type='class')==
            ziptest$y))
 
 1-mean(!(predict(ridge.cv,newx = x_train,type='class')==
            ziptrain$y))
 
-#1% increase when categorical variables are fed using this method
+#2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
+
+
 #===============================================================================================================================
 #Accuracy of the KNN model at different k values
-
 rm(list=ls())
 library(caret)
+library(C50)
+set.seed(1045)
 classSim <- read.csv('train.csv')
 classSim$y = factor(classSim$y, levels = c(0, 1))
 
@@ -134,11 +139,11 @@ nfolds <- 10
 trControl <- trainControl(method  = "cv",
                           number  = nfolds)
 max_k <- 100
+
 fit <- train(form = y ~ .,
              data = classSim,
-             method     = "knn",
-             tuneGrid   = expand.grid(k = 1:max_k),
-             trControl  = trControl,
+             method     = "C5.0",
+             trControl  = trControl,tuneLength=50,
              metric     = "Accuracy")
 
 palette = c(tolBlue = "#4477AA",
@@ -149,5 +154,21 @@ palette = c(tolBlue = "#4477AA",
             tolPurple = "#AA3377",
             tolGrey = "#BBBBBB") %>% unname()
 plot(fit, col = palette[1])
+#====================================================================================================
+rm(list=ls())
+#GBM to find most relevant variables
+library("gbm")
+set.seed(77850)
+dataset <- read.csv('train.csv')
+gbm.fit <- gbm(y~.,
+               distribution="bernouilli",
+               data=dataset,
+               n.trees=750,
+               interaction.depth=4,
+               shrinkage=0.01,cv.folds = 3)
 
-
+summary(gbm.fit)
+#==========================================================================================================
+ziptrain.imputed <- rfImpute(y~.,ziptrain)
+#Tried this, it doesn't increase accuracy (imputing and adding variables)
+#==========================================================================================================
