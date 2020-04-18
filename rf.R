@@ -7,32 +7,32 @@ dataset = read.csv('train.csv')
 summary(dataset)
 
 #Changing the data
-#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
-#levels(dataset$education)
-#dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
-#dataset$outcome_old[dataset$outcome_old == "failure"] <- "na"
-#dataset$marital[dataset$marital == "divorced"] <- "single"
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+levels(dataset$education)
+dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
+dataset$outcome_old[dataset$outcome_old == "failure"] <- "na"
+dataset$marital[dataset$marital == "divorced"] <- "single"
 
 #Testing these
-#dataset$job[dataset$job == "salesman"] <- "industrial_worker"
-#dataset$job[dataset$job == "industrial_worker"] <- "housekeeper"
-#dataset$job[dataset$job == "industrial_worker"] <- "na"
+dataset$job[dataset$job == "salesman"] <- "industrial_worker"
+dataset$job[dataset$job == "industrial_worker"] <- "housekeeper"
+dataset$job[dataset$job == "industrial_worker"] <- "na"
 
 
-#dataset$job[dataset$job == "high_school"] <- "university"
-#dataset$job[dataset$job == "university"] <- "na"
+dataset$job[dataset$job == "high_school"] <- "university"
+dataset$job[dataset$job == "university"] <- "na"
 
-#dataset$job[dataset$job == "desktop"] <- "na"
+dataset$job[dataset$job == "desktop"] <- "na"
 
-#dataset[ dataset == "na" ] <- NA
+dataset[ dataset == "na" ] <- NA
 
 #Factor like columns
-#dataset$job=as.integer(dataset$job)
-#dataset$marital=as.integer(dataset$marital)
-#dataset$education=as.integer(dataset$education)
-#dataset$device=as.integer(dataset$device)
-#dataset$outcome_old=as.integer(dataset$outcome_old)
-#dataset[is.na(dataset)] <- 0
+dataset$job=as.integer(dataset$job)
+dataset$marital=as.integer(dataset$marital)
+dataset$education=as.integer(dataset$education)
+dataset$device=as.integer(dataset$device)
+dataset$outcome_old=as.integer(dataset$outcome_old)
+dataset[is.na(dataset)] <- 0
 
 summary(dataset)
 # Encoding the target feature as factor
@@ -54,21 +54,6 @@ library(caret)
 library(C50)
 classifier = randomForest(x = training_set[,-17],
                           y = training_set$y)         #, ntree = 500)  
-
-fit <- train(form = y ~ .,
-             x = training_set[,-17], y=training_set[,17],
-             method     = "C5.0",
-             tuneLength=30,
-             metric     = "Accuracy")
-
-palette = c(tolBlue = "#4477AA",
-            tolRed = "#EE6677",
-            tolGreen = "#228833",
-            tolYellow = "#CCBB44",
-            tolCyan = "#66CCEE",
-            tolPurple = "#AA3377",
-            tolGrey = "#BBBBBB") %>% unname()
-plot(fit, col = palette[1])
 
 # Predicting the Test set results
 y_pred = predict(fit, newdata = test_set)

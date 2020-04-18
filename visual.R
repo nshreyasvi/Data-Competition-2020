@@ -130,7 +130,6 @@ pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 #Accuracy of the KNN model at different k values
 rm(list=ls())
 library(caret)
-library(C50)
 set.seed(123)
 classSim <- read.csv('train.csv')
 classSim$y = factor(classSim$y, levels = c(0, 1))
