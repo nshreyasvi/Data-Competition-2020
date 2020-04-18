@@ -131,7 +131,7 @@ pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 rm(list=ls())
 library(caret)
 library(C50)
-set.seed(1045)
+set.seed(123)
 classSim <- read.csv('train.csv')
 classSim$y = factor(classSim$y, levels = c(0, 1))
 
@@ -140,10 +140,11 @@ trControl <- trainControl(method  = "cv",
                           number  = nfolds)
 max_k <- 100
 
+#Use this function to plot graphs for all the possible models used
 fit <- train(form = y ~ .,
              data = classSim,
-             method     = "C5.0",
-             trControl  = trControl,tuneLength=50,
+             method     = "knn", #can be changed here to 17 other configurations including random forest etc and accuracy can be plotted vs n trees/k value etc
+             trControl  = trControl,
              metric     = "Accuracy")
 
 palette = c(tolBlue = "#4477AA",
