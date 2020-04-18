@@ -365,3 +365,62 @@ plot(fit.lasso,xvar="lambda")
 cv.fit.lasso<- cv.glmnet(x,y,alpha = 1, lambda = grid,family = "binomial", standardize = TRUE)
 plot(cv.fit.lasso,xvar="lambda")
 
+#===================================================================================
+rm(list=ls())
+library(MASS)
+library(tidyverse)
+set.seed(42)
+
+dataset<-read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+dataset$job=as.integer(dataset$job)
+dataset$marital=as.integer(dataset$marital)
+dataset$education=as.integer(dataset$education)
+dataset$device=as.integer(dataset$device)
+dataset$outcome_old=as.integer(dataset$outcome_old)
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+ziptrain = subset(dataset, split == TRUE)
+ziptest = subset(dataset, split == FALSE)
+
+library(glmnet)
+
+ridge.fit <- glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
+                                family='binomial',alpha=0)
+
+plot(ridge.fit,xvar='lambda',label=TRUE)
+
+nlam<-length(ridge.fit$lambda)
+ridge.pred.tr<-predict(ridge.fit,newx=as.matrix(ziptrain[,-17]),
+                       type = 'class')
+ridge.pred.te<-predict(ridge.fit,newx=as.matrix(ziptest[,-17]),
+                       type='class')
+
+ridge.train <- ridge.test <- numeric(nlam)
+
+for (i in 1:nlam){
+  ridge.train[i] <- mean(!(ridge.pred.tr[,i]==ziptrain$y))
+  ridge.test[i] <- mean(!(ridge.pred.te[,i]==ziptest$y))
+}
+
+plot(log(ridge.fit$lambda),ridge.train,type='l')
+lines(log(ridge.fit$lambda),ridge.test,col='red')
+lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
+
+ridge.cv <- cv.glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
+                      family='binomial',alpha=0,nfolds=5)
+plot(ridge.cv)
+
+ridge.cv$lambda.min
+
+ridge_coeffs <- coef(ridge.cv, s="lambda.min")
+
+pred_ridge.te <- predict(ridge.cv,newx=as.matrix(ziptest[,-17]),type='class')
+pred_ridge.tr <- predict(ridge.cv,newx=as.matrix(ziptrain[,-17]),type='class')
+
+1-mean(!(predict(ridge.cv,newx = as.matrix(ziptest[,-17]),type='class')==
+         ziptest$y))
+
+1-mean(!(predict(ridge.cv,newx = as.matrix(ziptrain[,-17]),type='class')==
+         ziptrain$y))
