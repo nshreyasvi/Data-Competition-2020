@@ -50,3 +50,4 @@ library(caret)
 confusionMatrix(cm)
 
 #87.15 percent, 86.76% balanced accuracy
+
