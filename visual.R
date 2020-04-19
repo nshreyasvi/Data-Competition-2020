@@ -161,7 +161,7 @@ library("gbm")
 set.seed(77850)
 dataset <- read.csv('train.csv')
 gbm.fit <- gbm(y~.,
-               distribution="bernouilli",
+               distribution="bernoulli",
                data=dataset,
                n.trees=750,
                interaction.depth=4,
