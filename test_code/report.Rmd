@@ -180,6 +180,26 @@ Number of predictors & ... & ... & ... & ...\\
 
 
 \section{Models}
+Based on the preliminary implementation of several models include kNN, SVM, random forest etc., we identified that random forest tends to give out the best prediction accuracy. We therefore explored random forest in order to improve the model to get the best possible accuracy for the same.
+We started by carrying out by implementing a GBM on the given dataset for 750 trees, 3 fold and 4 interaction depth.
+\subsection{GBM Cross Validation}
+In order to identify the most significant variables, we also implemented a generalized boosted regression model (GBM) to the given dataset and cross validated again that time-spent as well as outcome old tends to have the most significance.
+```{r}
+#====================================================================================================
+rm(list=ls())
+#GBM to find most relevant variables
+library("gbm")
+set.seed(77850)
+dataset <- read.csv('train.csv')
+gbm.fit <- gbm(y~.,
+               distribution="bernoulli",
+               data=dataset,
+               n.trees=750,
+               interaction.depth=4,
+               shrinkage=0.01,cv.folds = 3)
+
+summary(gbm.fit)
+```
 
 \subsection{Random Forest}
 Out of the box, random forest method provided us with a very good training as well as prediction accuracy on our current dataset. Therefore, the first approach was to fit a random forest model, which calculated its mean square error using the following formula.
@@ -253,7 +273,11 @@ library(caret)
 confusionMatrix(cm)
 ```
 We fit several different linear models to find the positive or negative depdendency as well as significance of each variable with respect to $y$. We then used them in order to reduce the number of levels in the factor in order to improve the model further.
-Using this we were able to get around $86.87%$ training accuracy and $86.557%$ for the test set.
+Using this we were able to get around $86.87%$ training accuracy and $86.557%$ for the test set. The main changes to the dataset were as follows:
+* Replacing "na" values as NaN.
+* Adding non-significant factor levels to "na" level.
+* Replacing all factors into inteager format (except $y$)
+* Merging factor levels with negative and positive non-significant correlation into one level.
 
 \subsection{Random Forest Plot}
 ```{r Accuracy, echo=FALSE}
@@ -277,26 +301,11 @@ palette = c(tolBlue = "#4477AA",
             tolGrey = "#BBBBBB") %>% unname()
 plot(fit, col = palette[1])
 ```
-\subsection{GBM Implementation}
-```{r}
-#====================================================================================================
-rm(list=ls())
-#GBM to find most relevant variables
-library("gbm")
-set.seed(77850)
-dataset <- read.csv('train.csv')
-gbm.fit <- gbm(y~.,
-               distribution="bernoulli",
-               data=dataset,
-               n.trees=750,
-               interaction.depth=4,
-               shrinkage=0.01,cv.folds = 3)
+We also carried out imputation of the given dataset replacing the values of "na" with values generated using the $rfImpute()$ function. However, wee did not observe any increase in the prediction accuracy.
 
-summary(gbm.fit)
-```
 \section{C5.0 Implementation}
-While implementing several models, a good prediction accuracy was also observed in case of C5.0 and got a prediction accuracy of $87.15%$ over the given dataset.
-
+While implementing several models, a good prediction accuracy was also observed in case of C5.0($87.15%$) over the given dataset.
+We will be presently exploring more on the same in order to try to add interaction and pre-process the dataset in order to increase the prediction accuracy further for the same.
 ```{r, echo=FALSE}
 rm(list=ls())
 library(caret)
@@ -343,7 +352,11 @@ library(caret)
 confusionMatrix(cm)
 ```
 \section{Results}
-We obtained the best prediction accuracy from the C5.0 model followed by Random forest where we carried out data manipulation by decreasing the number of factor levels.
+We obtained the best prediction accuracy from the C5.0 model(87.15%) followed by Random forest with the data manipulation (86.87%) by decreasing the number of factor levels.
+As a next step we will be 
+* Exploring more over the predictions provided by ElasticNet as it tends to give a good training accuracy at initial stages. 
+* Looking forward to running the C5.0 with data manipulation
+* Checking for other models that might give a better accuracy than the models presently used.
 
 \section{Tests}
 \subsection{Preliminary Implementation}
