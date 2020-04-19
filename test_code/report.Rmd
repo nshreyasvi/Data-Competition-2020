@@ -23,7 +23,7 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE, cache=TRUE, fig.show = 'hold
                       fig.align = 'center', out.width = "75%")
 
 ```
-Github Repo: https://github.com/nshreyasvi/ml_2020)
+Github Repo: https://github.com/nshreyasvi/ml_2020 (private)
 
 \section{Introduction}
 For the given data competition, we were provided with data pertaining to previous adverstisement campaigns as well as demographics of users for the same along with some new data which was obtained from a survey. 
@@ -118,9 +118,8 @@ We carried out a preliminrary implementation of several different types of model
 
 
 Based on the preliminary implementation of several models include kNN, SVM, random forest etc., we identified that random forest tends to give out the best prediction accuracy. We therefore explored random forest in order to improve the model to get the best possible accuracy for the same.
-We started by carrying out by implementing a GBM on the given dataset for 750 trees, 3 fold and 4 interaction depth.
 \subsection{Random Forest}
-Out of the box, random forest method provided us with a very good training as well as prediction accuracy on our current dataset. Therefore, the first approach was to fit a random forest model, which calculated its mean square error using the following formula.
+Out of the box, random forest method provided us with a very good training as well as prediction accuracy on our current dataset. Therefore, the first approach was to fit a random forest model. Random forests uses mean square error to train itself using the following formula.
 $$
   MSE = 1/n \sum_{i=1}^n (fi-yi)^2,
 $$
@@ -226,6 +225,7 @@ We also carried out imputation of the given dataset replacing the values of "na"
 \subsection{GBM Cross Validation}
 In order to identify the most significant variables, we also implemented a generalized boosted regression model (GBM) to the given dataset and cross validated again that time-spent as well as outcome old tends to have the most significance.
 A major result we also observed was that there seems to specific age groups, time_spent values as well as other factor levels which tend to have very less influence on the prediction $y$. Therefore, we plan to convert the age group into categorical variable in the next step along with finetuning some other categorical variables to make the dataset simpler for the model to understand.
+We implemented for 750 trees, 3 fold and 4 interaction depth.
 ```{r, echo=FALSE, fig.cap="Relative influence(GBM)"}
 #====================================================================================================
 rm(list=ls())
