@@ -184,7 +184,7 @@ Based on the preliminary implementation of several models include kNN, SVM, rand
 We started by carrying out by implementing a GBM on the given dataset for 750 trees, 3 fold and 4 interaction depth.
 \subsection{GBM Cross Validation}
 In order to identify the most significant variables, we also implemented a generalized boosted regression model (GBM) to the given dataset and cross validated again that time-spent as well as outcome old tends to have the most significance.
-```{r}
+```{r, echo=FALSE}
 #====================================================================================================
 rm(list=ls())
 #GBM to find most relevant variables
@@ -315,9 +315,9 @@ The winnow algorithm is a technique from machine learning for learning a linear 
 We will be presently exploring more on the same in order to try to add interaction and pre-process the dataset in order to increase the prediction accuracy further for the same. It applies the typical prediction rule for linear classifiers:
 If,
 $$
-  \sum_{i=1}^n wi.xi> Θ, y=1,else,0
+  \sum_{i=1}^n wi.xi> \theta, y=1,else,0
 $$
-Here $Θ$ is a real number called threshold, $wi$ are the weights and $xi$ are the features, $y$ is the prediction label as a factor.
+Here $\theta$ is a real number called threshold, $wi$ are the weights and $xi$ are the features, $y$ is the prediction label as a factor.
 ```{r, echo=FALSE}
 rm(list=ls())
 library(caret)
