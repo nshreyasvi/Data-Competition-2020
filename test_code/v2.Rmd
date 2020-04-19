@@ -44,7 +44,7 @@ We also observed that `time_spent`,`outcome_old` and `X3` tends to hold a very h
 #install.packages("DataExplorer")
 library(tidyverse)
 library(DataExplorer)
-dataset = read.csv("C:/Users/trasa/Desktop/2020 2nd semester/Machine Learning/Contest/test.csv")
+dataset = read.csv("train.csv")
 dataset[ dataset == "na" ] <- NA
 web<- dataset
 
