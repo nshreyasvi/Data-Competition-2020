@@ -1,0 +1,898 @@
+---
+title: "Machine learning Data Competition 2020"
+subtitle: 'Report I.'
+author: Shreyasvi Natraj (Team ML_B)
+output:
+  pdf_document:
+        number_sections: true
+  html_document:
+    df_print: paged
+urlcolor: blue
+---
+
+
+```{r setup, include=FALSE}
+# import knitr (super important!!!)
+library(knitr)
+
+# import kableExtra (to print nice tables)
+library(kableExtra)
+
+# set global options (can be modified locally)
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, cache=TRUE, fig.show = 'hold', 
+                      fig.align = 'center', out.width = "75%")
+
+```
+Github Repo: https://github.com/nshreyasvi/ml_2020 (private)
+
+\section{Introduction}
+For the given data competition, we were provided with data pertaining to previous adverstisement campaigns as well as demographics of users for the same along with some new data which was obtained from a survey. 
+
+For the objective of the given challenge, we were required to train a model that can be used in order to predict whether if a user is likely to have a "conversion" where a "conversion" refers to the user clicking on the advertisement and subscribing to the service.
+
+Since the data provided was used in order to predict a categorical variable i.e. "conversion/y", we initially started with a quick an dirty implementation of the all the categorical classification models to check for the model which gives us the best accuracy out of the box.
+
+We later on transitioned to working in depth on each of the model to find the best model for the current dataset and then check which one provides us with the best accuracy under the best configuration. We initially carried out with exploratory data analysis for the data provided to us by considering na values as NaN values.
+
+\section{Exploratory data analysis}
+We observed from this that it would not be a good idea to not consider the na values as NaN but as a separate level. However, based on similarity in between the classes, we can merge different levels of a factor into lesser number of levels so they are easier for our model to interpret.
+
+We carried out all of the following tests in 3 different fashion:
+- Converting na values as NaN
+
+- Converting the factor values into integer values
+
+- Converting all the variables into a continous variable format and checking
+
+The main interpretation that we found from the given dataset were:
+- Converting categorical variables into integer format tends to show a similar fashion to the current analysis being carried out.
+
+- Removing the na values as NaN tends to take out a large portion of the data that might be useful for training the model. However, if we replaced "na" values with 0, the data becomes much more consistent.
+
+- There tends to be several variables with very high variation throughout the data distribution. Hence, we would require a way to reduce them so that they are more consistent.
+
+We also observed that `time_spent`,`outcome_old` and `X3` tends to hold a very high significance when predicting conversion `y`. In order to try to check if the data becomes more consistent if the na values are replaced. We also planned on implementation of data imputation in order to fill up the missing values.
+
+```{r Data Distribution, echo=FALSE, fig.cap="Data Distribution"}
+#install.packages("DataExplorer")
+library(tidyverse)
+library(DataExplorer)
+dataset = read.csv('train.csv')
+dataset[ dataset == "na" ] <- NA
+
+web<- dataset
+#To go with glimpse(), DataExplorer itself has got a function called introduce()
+
+#The same introduce() could also be plotted in a pretty graph.
+plot_intro(web,  ggtheme = theme_dark(),
+             title = "EDA with Data Explorer",
+             )
+```
+
+```{r Continous variables, echo=FALSE, fig.cap="Continous Variables"}
+##for univariate
+
+DataExplorer::plot_histogram(web,  
+             title = " Histogram of continuous features",
+             )
+```
+
+```{r Correlation Plot, echo=FALSE, fig.cap="Correlation Plot"}
+##autocorr plot
+plot_correlation(web)
+```
+
+\section{Models}
+We carried out a preliminrary implementation of several different types of models which gave us the accuracies as shown in Table 1.
+
+\begin{table} 
+\begin{center}
+\begin{tabular}{|l|c|c|c|} \hline
+  Model & Accuracy & Balanced Accuracy\\
+  kNN & 80.53 & 80.90 \\
+  Decision Trees & 79.46 & 79.20 \\
+  Naive Bayes & 74.44 & 73.94 \\
+  Logistic Regression & 81.85 & 82.10 \\
+  random forest & 86.3 & 85.92 \\
+  SVM & 84.76 & 84.38 \\
+  
+\hline
+\end{tabular}
+\end{center}
+\caption{Prediction Accuracy and Balanced Accuracy for different models } \label{tab_res}
+\end{table}
+
+\begin{table} 
+\begin{center}
+\begin{tabular}{|l|c|c|c|} \hline
+  Model & Accuracy Training & Accuracy Testing \\
+  ElasticNet &  0.8245779 & 0.8148264 \\
+  Ridge Glmnet & 0.81107 & 0.818480 \\
+  Lasso Glmnet & 0.81435 &  0.823639 \\
+
+\hline
+\end{tabular}
+\end{center}
+\caption{Training and Testing accuracy of glmnet at different $\alpha$ } \label{tab_res}
+\end{table}
+
+
+Based on the preliminary implementation of several models include kNN, SVM, random forest etc., we identified that random forest tends to give out the best prediction accuracy. We therefore explored random forest in order to improve the model to get the best possible accuracy for the same.
+\subsection{Random Forest}
+Out of the box, random forest method provided us with a very good training as well as prediction accuracy on our current dataset. Therefore, the first approach was to fit a random forest model. Random forests uses mean square error to train itself using the following formula.
+$$
+  MSE = 1/n \sum_{i=1}^n (fi-yi)^2,
+$$
+where n is number of data points $fi$ is the factor prediction made by the model and $yi$ is the actual factor value.
+
+We carried out cross validation for the same by using a 10 fold cross-validation.
+```{r Random Forest, echo = FALSE, fig.cap="Random Forest Accuracy"}
+#Accuracy of the Random Forest
+rm(list=ls())
+library(caret)
+set.seed(123)
+dataset <- read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+#Changing the data
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset$outcome_old[dataset$outcome_old == "other"] <- "failure"
+dataset$outcome_old[dataset$outcome_old == "failure"] <- "na"
+dataset$marital[dataset$marital == "divorced"] <- "single"
+
+#Testing these
+dataset$job[dataset$job == "salesman"] <- "industrial_worker"
+dataset$job[dataset$job == "industrial_worker"] <- "housekeeper"
+dataset$job[dataset$job == "industrial_worker"] <- "na"
+
+
+dataset$job[dataset$job == "high_school"] <- "university"
+dataset$job[dataset$job == "university"] <- "na"
+
+dataset$job[dataset$job == "desktop"] <- "na"
+
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(dataset$job)
+dataset$marital=as.integer(dataset$marital)
+dataset$education=as.integer(dataset$education)
+dataset$device=as.integer(dataset$device)
+dataset$outcome_old=as.integer(dataset$outcome_old)
+dataset[is.na(dataset)] <- 0
+# Encoding the target feature as factor
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+library(randomForest)
+library(caret)
+library(C50)
+classifier = randomForest(x = training_set[,-17],
+                          y = training_set$y)         #, ntree = 500)  
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set)
+
+# Making the Confusion Matrix
+cm = table(test_set[,17], y_pred)
+print("=====================================Random Forest=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+We fit several different linear models to find the positive or negative depdendency as well as significance of each variable with respect to $y$. We then used them in order to reduce the number of levels in the factor in order to improve the model further.
+Using this we were able to get around $86.87%$ training accuracy and $86.557%$ for the test set. The main changes to the dataset were as follows:
+- Replacing "na" values as NaN.
+
+- Adding non-significant factor levels to "na" level.
+
+- Replacing all factors into inteager format (except $y$)
+
+- Reducing factor levels with negative and positive non-significant correlation into one level by fitting a linear model to each variable.
+
+- Manually identifying characteristic features which might have been relatively similar and reducing factor levels based on that.
+
+```{r Accuracy, echo=FALSE, fig.cap="Random Forest Cross-Validated Accuracy"}
+nfolds <- 5
+trControl <- trainControl(method  = "cv",
+                          number  = nfolds)
+
+#Use this function to plot graphs for all the possible models used
+fit <- train(form = y ~ .,
+             data = dataset,
+             method     = "rf",
+             trControl  = trControl,
+             metric     = "Accuracy")
+
+palette = c(tolBlue = "#4477AA",
+            tolRed = "#EE6677",
+            tolGreen = "#228833",
+            tolYellow = "#CCBB44",
+            tolCyan = "#66CCEE",
+            tolPurple = "#AA3377",
+            tolGrey = "#BBBBBB") %>% unname()
+plot(fit, col = palette[1])
+```
+We also carried out imputation of the given dataset replacing the values of "na" with values generated using the $rfImpute()$ function. However, wee did not observe any increase in the prediction accuracy.
+\subsection{GBM Cross Validation}
+In order to identify the most significant variables, we also implemented a generalized boosted regression model (GBM) to the given dataset and cross validated again that time-spent as well as outcome old tends to have the most significance.
+A major result we also observed was that there seems to specific age groups, time_spent values as well as other factor levels which tend to have very less influence on the prediction $y$. Therefore, we plan to convert the age group into categorical variable in the next step along with finetuning some other categorical variables to make the dataset simpler for the model to understand.
+We implemented for 750 trees, 3 fold and 4 interaction depth.
+```{r, echo=FALSE, fig.cap="Relative influence(GBM)"}
+#====================================================================================================
+rm(list=ls())
+#GBM to find most relevant variables
+library("gbm")
+set.seed(77850)
+dataset <- read.csv('train.csv')
+gbm.fit <- gbm(y~.,
+               distribution="bernoulli",
+               data=dataset,
+               n.trees=750,
+               interaction.depth=4,
+               shrinkage=0.01,cv.folds = 3)
+
+summary(gbm.fit)
+```
+
+\subsection{C5.0 Implementation}
+While implementing several models, a good prediction accuracy was also observed in case of C5.0($87.15%$) over the given dataset.
+C5.0 uses the concept of entropy for measuring purity. The entropy of a sample of data indicates how mixed the class values are; the minimum value of 0 indicates that the sample is completely homogenous, while 1 indicates the maximum amount of disorder. The defintion of entropy can be specified as:
+$$
+  S = \sum_{i=1}^c -pi.log(pi),
+$$
+For a given segment of data ($S$), the term $c$ refers to the number of differenct class levels, and $pi$ refers to the proportion of values falling into the cass level $i$.
+We carry out the implementation of the C5.0 with and withou winnowing.
+The winnow algorithm is a technique from machine learning for learning a linear classifier from labeled examples.
+We will be presently exploring more on the same in order to try to add interaction and pre-process the dataset in order to increase the prediction accuracy further for the same. It applies the typical prediction rule for linear classifiers:
+If,
+$$
+  \sum_{i=1}^n wi.xi> \theta, y=1,else,0
+$$
+Here $\theta$ is a real number called threshold, $wi$ are the weights and $xi$ are the features, $y$ is the prediction label as a factor.
+```{r, echo=FALSE, fig.cap="C5.0 Accuracy (With and without winnowing)"}
+rm(list=ls())
+library(caret)
+library(C50)
+set.seed(123)
+dataset <- read.csv('train.csv')
+
+dataset$y = factor(dataset$y, levels = c(0, 1))
+#dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+nfolds <- 5
+trControl <- trainControl(method  = "cv",
+                          number  = nfolds)
+
+fit <- train(form = y ~ .,
+             data = training_set,
+             method     = "C5.0", 
+             trControl  = trControl,
+             tuneLength = 5, #5
+             control = C5.0Control(earlyStopping = FALSE),
+             metric     = "Accuracy")
+
+palette = c(tolBlue = "#4477AA",
+            tolRed = "#EE6677",
+            tolGreen = "#228833",
+            tolYellow = "#CCBB44",
+            tolCyan = "#66CCEE",
+            tolPurple = "#AA3377",
+            tolGrey = "#BBBBBB") %>% unname()
+plot(fit, col = palette[1])
+```
+
+```{r, echo=FALSE}
+# Predicting the Test set results
+y_pred = predict(fit, newdata = test_set)
+# Making the Confusion Matrix
+cm = table(test_set[,17], y_pred)
+print("=====================================C5.0=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+\section{Results}
+- We obtained the best prediction accuracy from the C5.0 model(87.15%) followed by Random forest with the data manipulation (86.87%) by decreasing the number of factor levels. 
+
+- We cross validated the random forest model at a later stage using the library `caret`.
+
+- We also implemented several analysis tools in order to identify significant variables as well as variables which are required to be reduced to get a better fit for the model. 
+
+- We observed that the accuracy decreases when imputed values are used in place of na values in the given dataset.
+
+- The accuracy tends to decreases when the factors are considered as numeric values. Hence, we need to figure out a way to significantly use them in logistic regression models.
+
+As a next step we will be:
+
+- Exploring more over the predictions provided by ElasticNet and finding optimal $\alpha$ value.
+
+- Running the C5.0 with data manipulation using results obtained from GBM.
+
+- Checking for other models that might give a better accuracy than the models presently used.
+
+\section{Tests}
+\subsection{ElasticNet Implementation}
+We carried out implementation of ElasticNet in order to understand more regarding the dataset as well as identifying details regarding each variable and its dependency with the predictor.
+ElasticNet, Lasso as well as Ridge regularization tend to use a penalty based system whose function can be defined as follows:
+$$
+  ||\beta||_1 =  \sum^p _{j=1}   |\beta_j||
+$$
+Use of this penalty function has several limitations. For example, in the "large p, small n" case. Here, $\beta$ is a value which is used to minimise error in accuracy of predictions and penalising the model with a certain value whenever a wrong prediction is made.
+In the current modes, if $\alpha$ is set to 1 (Ridge Method), the penalty carried out is higher.
+
+```{r,echo=FALSE, fig.cap="ElasticNet Dependency Chart"}
+#============================================================================================================================
+rm(list=ls())
+#Without converting categorical variables
+library(MASS)
+library(tidyverse)
+library(glmnet)
+set.seed(123)
+
+dataset<-read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+ziptrain = subset(dataset, split == TRUE)
+ziptest = subset(dataset, split == FALSE)
+
+x_train<-model.matrix(y~.,ziptrain)[,-17]
+x_test<-model.matrix(y~.,ziptest)[,-17]
+#y <- ifelse(ziptrain$y == "pos",1, 0)
+#Ridge and Lasso 
+ridge.fit <- glmnet(x=x_train,y=ziptrain[,17],
+                    family='binomial',alpha=0.5)#,lambda = ridge.cv$lambda.min)
+
+plot(ridge.fit,xvar='lambda',label=TRUE)
+```
+```{r, echo=FALSE, fig.cap="ElasticNet Error Rate"}
+nlam<-length(ridge.fit$lambda)
+ridge.pred.tr<-predict(ridge.fit,newx=x_train,
+                       type = 'class')
+ridge.pred.te<-predict(ridge.fit,newx=x_test,
+                       type='class')
+
+ridge.train <- ridge.test <- numeric(nlam)
+
+for (i in 1:nlam){
+  ridge.train[i] <- mean(!(ridge.pred.tr[,i]==ziptrain$y))
+  ridge.test[i] <- mean(!(ridge.pred.te[,i]==ziptest$y))
+}
+
+plot(log(ridge.fit$lambda),ridge.train,type='l')
+lines(log(ridge.fit$lambda),ridge.test,col='red')
+lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
+```
+
+```{r, echo=FALSE, fig.cap="ElasticNet Crossvalidation Plot"}
+ridge.cv <- cv.glmnet(x=x_train,y=ziptrain[,17],
+                      family='binomial',alpha=0.5,nfolds=10)
+plot(ridge.cv)
+
+ridge_coeffs <- coef(ridge.cv, s="lambda.min")
+
+pred_ridge.te <- predict(ridge.cv,newx=x_test,type='class')
+pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
+
+#print("Testing Accuracy")
+#print(1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y)))
+
+#print("Training Accuracy")
+#print(1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y)))
+```
+
+
+We were able to get around $82.45779%$ prediction accuracy and $81.48264%$ training accuracy using this method using a 10 fold cross validation which was similar to Lasso models but better than the Ridge model.
+
+Furthermore, when considering the training set as a matrix full of numerical variables or converting factors into numerical variables, this accuracy decreased by 2%. Therefore, we fit a matrix model initially to consider the factor variables in the correct manner and not loose accuracy during prediction.
+
+\subsection{Detailed kNN implementation}
+We also implemented a kNN at initial stage in order to identify if it could perform good on the given dataset. However, it was only able to obtain a prediction accuracy of $79.97%$ which was outperformed by random forest.
+kNN algorithm makes used of ditributing weights across different variables in order to make a prediction. These weights are set based on $k$ value defined in the given model.
+For out current implementation, we test out the best model fit across different $k$ values.
+```{r, echo=FALSE, fig.cap="kNN Accuracy Plot"}
+#===============================================================================================================================
+#Accuracy of the KNN model at different k values
+rm(list=ls())
+library(caret)
+set.seed(123)
+dataset <- read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+nfolds <- 10
+trControl <- trainControl(method  = "cv",
+                          number  = nfolds)
+max_k <- 100
+
+#Use this function to plot graphs for all the possible models used
+fit <- train(form = y ~ .,
+             data = training_set,
+             method     = "knn", #can be changed here to 17 other configurations including random forest etc and accuracy can be plotted vs n trees/k value etc
+             trControl  = trControl,
+             metric     = "Accuracy")
+
+palette = c(tolBlue = "#4477AA",
+            tolRed = "#EE6677",
+            tolGreen = "#228833",
+            tolYellow = "#CCBB44",
+            tolCyan = "#66CCEE",
+            tolPurple = "#AA3377",
+            tolGrey = "#BBBBBB") %>% unname()
+plot(fit, col = palette[1])
+```
+
+```{r,echo=FALSE, fig.cap="kNN prediction accuracy"}
+# Predicting the Test set results
+y_pred = predict(fit, newdata = test_set)
+# Making the Confusion Matrix
+cm = table(test_set[,17], y_pred)
+print("=====================================kNN=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+\section{Annex}
+\subsection{Lasso and Ridge Implementation}
+This is presently something we are carrying out in order to identify a good fit for the model. Here, $nfolds$=10 (Number of Folds).
+```{r, echo=FALSE, fig.cap="Ridge Glmnet Dependency chart"}
+rm(list=ls())
+print("Ridge Implementation")
+#Without converting categorical variables
+library(MASS)
+library(tidyverse)
+library(glmnet)
+set.seed(123)
+
+dataset<-read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+ziptrain = subset(dataset, split == TRUE)
+ziptest = subset(dataset, split == FALSE)
+
+x_train<-model.matrix(y~.,ziptrain)[,-17]
+x_test<-model.matrix(y~.,ziptest)[,-17]
+#y <- ifelse(ziptrain$y == "pos",1, 0)
+#Ridge and Lasso 
+ridge.fit <- glmnet(x=x_train,y=ziptrain[,17],
+                    family='binomial',alpha=0)#,lambda = ridge.cv$lambda.min)
+
+plot(ridge.fit,xvar='lambda',label=TRUE)
+```
+
+```{r, echo=FALSE, fig.cap="Ridge Glmnet Error Rate"}
+nlam<-length(ridge.fit$lambda)
+ridge.pred.tr<-predict(ridge.fit,newx=x_train,
+                       type = 'class')
+ridge.pred.te<-predict(ridge.fit,newx=x_test,
+                       type='class')
+
+ridge.train <- ridge.test <- numeric(nlam)
+
+for (i in 1:nlam){
+  ridge.train[i] <- mean(!(ridge.pred.tr[,i]==ziptrain$y))
+  ridge.test[i] <- mean(!(ridge.pred.te[,i]==ziptest$y))
+}
+
+plot(log(ridge.fit$lambda),ridge.train,type='l')
+lines(log(ridge.fit$lambda),ridge.test,col='red')
+lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
+ridge.cv <- cv.glmnet(x=x_train,y=ziptrain[,17],
+                      family='binomial',alpha=0,nfolds=10)
+```
+
+```{r, echo=FALSE}
+plot(ridge.cv)
+
+ridge_coeffs <- coef(ridge.cv, s="lambda.min")
+
+pred_ridge.te <- predict(ridge.cv,newx=x_test,type='class')
+pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
+
+#print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
+
+#print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
+
+#2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
+```
+Lasso Implementation seems to perform better compared to Ridge implementation. We then tried to adjust the $\alpha$ value to 0.5 (ElasticNet) to check if it gave better result. Moreover, based on the analysis done using GBM, we will be adjusting the input variables given to the current model to check the increase in their accuracy.
+```{r, echo=FALSE, fig.cap="Lasso Glmnet Dependency Chart"}
+#=======================================================================================================================================
+print("Lasso Implementation")
+rm(list=ls())
+#Without converting categorical variables
+library(MASS)
+library(tidyverse)
+library(glmnet)
+set.seed(123)
+
+dataset<-read.csv('train.csv')
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+ziptrain = subset(dataset, split == TRUE)
+ziptest = subset(dataset, split == FALSE)
+
+x_train<-model.matrix(y~.,ziptrain)[,-17]
+x_test<-model.matrix(y~.,ziptest)[,-17]
+#y <- ifelse(ziptrain$y == "pos",1, 0)
+#Ridge and Lasso 
+ridge.fit <- glmnet(x=x_train,y=ziptrain[,17],
+                    family='binomial',alpha=1)#,lambda = ridge.cv$lambda.min)
+plot(ridge.fit,xvar='lambda',label=TRUE)
+```
+
+```{r, echo=FALSE,fig.cap="Lasso Glmnet Cross Validation"}
+
+nlam<-length(ridge.fit$lambda)
+ridge.pred.tr<-predict(ridge.fit,newx=x_train,
+                       type = 'class')
+ridge.pred.te<-predict(ridge.fit,newx=x_test,
+                       type='class')
+
+ridge.train <- ridge.test <- numeric(nlam)
+
+for (i in 1:nlam){
+  ridge.train[i] <- mean(!(ridge.pred.tr[,i]==ziptrain$y))
+  ridge.test[i] <- mean(!(ridge.pred.te[,i]==ziptest$y))
+}
+plot(log(ridge.fit$lambda),ridge.train,type='l')
+lines(log(ridge.fit$lambda),ridge.test,col='red')
+lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
+
+ridge.cv <- cv.glmnet(x=x_train,y=ziptrain[,17],
+                      family='binomial',alpha=1,nfolds=10)
+```
+
+```{r, echo=FALSE, fig.cap="Lasso Glmnet Crossvalidation"}
+plot(ridge.cv)
+
+ridge_coeffs <- coef(ridge.cv, s="lambda.min")
+
+pred_ridge.te <- predict(ridge.cv,newx=x_test,type='class')
+pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
+```
+
+```{r, echo=FALSE}
+#print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
+
+#print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
+
+#2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
+```
+
+\subsection{Preliminary Implementation}
+We started by dividing the set into 75-35 percent split and running them through different machine learning models in a crude manner to check out of the box which model tends to perform best on the given dataset.
+```{r, echo=FALSE}
+#Support Vector Machine
+rm(list=ls())
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor
+dataset$y= factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+#install.packages('caTools')
+library(caTools)
+set.seed(123)
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+# Fitting SVM to the Training set
+#install.packages('e1071')
+library(e1071)
+classifier = svm(formula = y ~ .,
+                 data = training_set,
+                 type = 'C-classification',
+                 kernel = 'radial')
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[-17],drop=TRUE)
+
+# Making the Confusion Matrix
+cm = table(test_set[, 17], y_pred)
+print("======================================SVM=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+
+```{r, echo=FALSE}
+#================================================================================================================
+rm(list=ls())
+#Random Forest Classification
+
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling #for higher resolution visualisation only we are using feature scaling,RF doesnt need feature scaling
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+# Fitting Random Forest Classification to the Training set
+#install.packages('randomForest')
+library(randomForest)
+classifier = randomForest(x = training_set[-17],
+                          y = training_set$y)#,                           ntree = 700)                 
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[-17])
+
+# Making the Confusion Matrix
+cm = table(test_set[, 17], y_pred)
+print("=====================================Random Forest=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+
+```{r, echo=FALSE}
+#=================================================================================================================
+# Logistic Regression
+rm(list=ls())
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[,1:16] = scale(training_set[,1:16])
+test_set[-17] = scale(test_set[-17]) #removes third column alone
+
+#fitting logistic regression to the training set
+classifier = glm(formula = y ~ .,
+                 family = binomial, #for logistic reg mention binomial
+                 data = training_set)
+
+#predicting the test set results
+prob_pred = predict(classifier, type = 'response',newdata = test_set[-17])#use type = response for logistic reg                                                         #that will give the prob listed in the single vector
+y_pred = ifelse(prob_pred > 0.5, 1, 0)
+
+#making the confusion matrix
+cm = table(test_set[,17], y_pred)
+
+print("=====================================Logistic Regression=====================================")
+
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+
+```{r, echo=FALSE}
+#=================================================================================================================
+#Naive Bayes
+rm(list=ls())
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor
+dataset$y = factor(dataset$y, levels = c(0, 1)) #labels /levels -both are same
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+# Fitting Naive Bayes to the Training set
+library(e1071)
+classifier = naiveBayes(x = training_set[-17],
+                        y = training_set$y) 
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[-17])
+
+# Making the Confusion Matrix
+cm = table(test_set[, 17], y_pred)
+
+print("=====================================Naive Bayes=====================================")
+
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+#=================================================================================================================
+```
+
+```{r, echo=FALSE}
+#Decision Tree Classification
+
+rm(list=ls())
+
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling #no need to scale,but to visualise in high resolution if we scale, the results will be fast otherwise code may break
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+# Fitting Decision TreeClassification to the Training set
+library(rpart)
+classifier = rpart(formula = y ~ .,
+                   data = training_set)
+
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[-17], type = 'class') 
+
+# Making the Confusion Matrix
+cm = table(test_set[, 17], y_pred)
+
+print("=====================================Decision Trees=====================================")
+
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
+
+```{r, echo=FALSE}
+#=================================================================================================================
+# k-nearest neighbors (K-NN)
+
+rm(list=ls())
+
+# Importing the dataset
+dataset = read.csv('train.csv')
+
+dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
+dataset[ dataset == "na" ] <- NA
+
+#Factor like columns
+dataset$job=as.integer(as.factor(dataset$job))
+dataset$marital=as.integer(as.factor(dataset$marital))
+dataset$education=as.integer(as.factor(dataset$education))
+dataset$device=as.integer(as.factor(dataset$device))
+dataset$outcome_old=as.integer(as.factor(dataset$outcome_old))
+dataset[is.na(dataset)] <- 0
+
+# Encoding the target feature as factor #(the values are considered as numeric values i.e 1 > 0 but we don't want that. 
+#Instead we want them to consider as factors i.e 1 and 0 as two different categories.)
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
+# Splitting the dataset into the Training set and Test set
+# install.packages('caTools')
+library(caTools)
+set.seed(123)
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+# Feature Scaling
+training_set[-17] = scale(training_set[-17])
+test_set[-17] = scale(test_set[-17])
+
+# Fitting K-NN to the Training set and predicting the test set results
+#install.packages('class')
+library(class)
+y_pred = knn(train = training_set[, -17],
+             test = test_set[, -17],
+             cl = training_set[, 17],k = 20)
+
+# Making the Confusion Matrix
+cm = table(test_set[, 17], y_pred)
+print("=====================================KNN=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+```
