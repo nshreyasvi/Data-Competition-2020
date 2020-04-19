@@ -23,31 +23,33 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE, cache=TRUE, fig.show = 'hold
                       fig.align = 'center', out.width = "75%")
 
 ```
+Github Repo: https://github.com/nshreyasvi/ml_2020)
 
 \section{Introduction}
-For the given data competition, we were provided with data pertaining to previous adverstisement campaigns as well as demographics of users who have been a part of the survey conducted. 
+For the given data competition, we were provided with data pertaining to previous adverstisement campaigns as well as demographics of users for the same along with some new data which was obtained from a survey. 
 
-For the objective of the given task, we are required to train a model that can be used in order to predict whether if a user is likely to have a "conversion" where a "conversion" refers to the user clicking on the advertisement and subscribing to the service.
+For the objective of the given challenge, we were required to train a model that can be used in order to predict whether if a user is likely to have a "conversion" where a "conversion" refers to the user clicking on the advertisement and subscribing to the service.
 
-Since the data provided is used in order to predict a categorical variable i.e. "conversion/y", we initially started with a quick an dirty implementation of the all the categorical classification models to check for the model which gives us the best accuracy out of the box.
-We later on transitioned to working in depth on each of the model to find the best model for the current dataset and then check which one provides us with the best accuracy under the best configuration.
+Since the data provided was used in order to predict a categorical variable i.e. "conversion/y", we initially started with a quick an dirty implementation of the all the categorical classification models to check for the model which gives us the best accuracy out of the box.
 
-We initially carried out with exploratory data analysis for the data provided to us by considering na values as NaN values.
+We later on transitioned to working in depth on each of the model to find the best model for the current dataset and then check which one provides us with the best accuracy under the best configuration. We initially carried out with exploratory data analysis for the data provided to us by considering na values as NaN values.
 
 \section{Exploratory data analysis}
 We observed from this that it would not be a good idea to not consider the na values as NaN but as a separate level. However, based on similarity in between the classes, we can merge different levels of a factor into lesser number of levels so they are easier for our model to interpret.
-\subsection{Data Manipulation}
+
 We carried out all of the following tests in 3 different fashion:
 - Converting na values as NaN
 
 - Converting the factor values into integer values
 
 - Converting all the variables into a continous variable format and checking
-\subsection{Interpretation} 
+
 The main interpretation that we found from the given dataset were:
 - Converting categorical variables into integer format tends to show a similar fashion to the current analysis being carried out.
 
 - Removing the na values as NaN tends to take out a large portion of the data that might be useful for training the model. However, if we replaced "na" values with 0, the data becomes much more consistent.
+
+- There tends to be several variables with very high variation throughout the data distribution. Hence, we would require a way to reduce them so that they are more consistent.
 
 We also observed that `time_spent`,`outcome_old` and `X3` tends to hold a very high significance when predicting conversion `y`. In order to try to check if the data becomes more consistent if the na values are replaced. We also planned on implementation of data imputation in order to fill up the missing values.
 
@@ -66,12 +68,7 @@ plot_intro(web,  ggtheme = theme_dark(),
              title = "EDA with Data Explorer",
              )
 ```
-```{r Missing variables,echo=FALSE, fig.cap="Missing Columns"}
-plot_missing(web,  
-             ggtheme = theme_dark(),
-             title = " Features missing from the whole observations",
-             )
-```
+
 ```{r Continous variables, echo=FALSE, fig.cap="Continous Variables"}
 ##for univariate
 
@@ -86,7 +83,8 @@ plot_correlation(web)
 ```
 
 \section{Models}
-We carried out a preliminrary implementation of several different types of models which gave us the following result for prediction accuracy:
+We carried out a preliminrary implementation of several different types of models which gave us the accuracies as shown in Table 1.
+
 \begin{table} 
 \begin{center}
 \begin{tabular}{|l|c|c|c|} \hline
@@ -103,6 +101,21 @@ We carried out a preliminrary implementation of several different types of model
 \end{center}
 \caption{Prediction Accuracy and Balanced Accuracy for different models } \label{tab_res}
 \end{table}
+
+\begin{table} 
+\begin{center}
+\begin{tabular}{|l|c|c|c|} \hline
+  Model & Accuracy Training & Accuracy Testing \\
+  ElasticNet &  0.8245779 & 0.8148264 \\
+  Ridge Glmnet & 0.81107 & 0.818480 \\
+  Lasso Glmnet & 0.81435 &  0.823639 \\
+
+\hline
+\end{tabular}
+\end{center}
+\caption{Training and Testing accuracy of glmnet at different $\alpha$ } \label{tab_res}
+\end{table}
+
 
 Based on the preliminary implementation of several models include kNN, SVM, random forest etc., we identified that random forest tends to give out the best prediction accuracy. We therefore explored random forest in order to improve the model to get the best possible accuracy for the same.
 We started by carrying out by implementing a GBM on the given dataset for 750 trees, 3 fold and 4 interaction depth.
@@ -170,7 +183,7 @@ y_pred = predict(classifier, newdata = test_set)
 
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
-print("=====================================C5.0=====================================")
+print("=====================================Random Forest=====================================")
 library(ggplot2)
 library(lattice)
 library(caret)
@@ -184,7 +197,9 @@ Using this we were able to get around $86.87%$ training accuracy and $86.557%$ f
 
 - Replacing all factors into inteager format (except $y$)
 
-- Merging factor levels with negative and positive non-significant correlation into one level.
+- Reducing factor levels with negative and positive non-significant correlation into one level by fitting a linear model to each variable.
+
+- Manually identifying characteristic features which might have been relatively similar and reducing factor levels based on that.
 
 ```{r Accuracy, echo=FALSE, fig.cap="Random Forest Cross-Validated Accuracy"}
 nfolds <- 5
@@ -284,25 +299,41 @@ plot(fit, col = palette[1])
 y_pred = predict(fit, newdata = test_set)
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
-print("=====================================Random Forest=====================================")
+print("=====================================C5.0=====================================")
 library(ggplot2)
 library(lattice)
 library(caret)
 confusionMatrix(cm)
 ```
 \section{Results}
-We obtained the best prediction accuracy from the C5.0 model(87.15%) followed by Random forest with the data manipulation (86.87%) by decreasing the number of factor levels.
+- We obtained the best prediction accuracy from the C5.0 model(87.15%) followed by Random forest with the data manipulation (86.87%) by decreasing the number of factor levels. 
+
+- We cross validated the random forest model at a later stage using the library `caret`.
+
+- We also implemented several analysis tools in order to identify significant variables as well as variables which are required to be reduced to get a better fit for the model. 
+
+- We observed that the accuracy decreases when imputed values are used in place of na values in the given dataset.
+
+- The accuracy tends to decreases when the factors are considered as numeric values. Hence, we need to figure out a way to significantly use them in logistic regression models.
+
 As a next step we will be:
 
-- Exploring more over the predictions provided by ElasticNet as it tends to give a good training accuracy at initial stages.
+- Exploring more over the predictions provided by ElasticNet and finding optimal $\alpha$ value.
 
-- Looking forward to running the C5.0 with data manipulation
+- Running the C5.0 with data manipulation using results obtained from GBM.
 
 - Checking for other models that might give a better accuracy than the models presently used.
 
 \section{Tests}
 \subsection{ElasticNet Implementation}
 We carried out implementation of ElasticNet in order to understand more regarding the dataset as well as identifying details regarding each variable and its dependency with the predictor.
+ElasticNet, Lasso as well as Ridge regularization tend to use a penalty based system whose function can be defined as follows:
+$$
+  ||\beta||_1 =  \sum^p _{j=1}   |\beta_j||
+$$
+Use of this penalty function has several limitations. For example, in the "large p, small n" case. Here, $\beta$ is a value which is used to minimise error in accuracy of predictions and penalising the model with a certain value whenever a wrong prediction is made.
+In the current modes, if $\alpha$ is set to 1 (Ridge Method), the penalty carried out is higher.
+
 ```{r,echo=FALSE, fig.cap="ElasticNet Dependency Chart"}
 #============================================================================================================================
 rm(list=ls())
@@ -363,11 +394,16 @@ pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 #print("Training Accuracy")
 #print(1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y)))
 ```
-We were able to get around $82.45779%$ prediction accuracy and $81.48264%$ training accuracy using this method using a 10 fold cross validation which was the best across Ridge and Lasso models which were also implemented.
+
+
+We were able to get around $82.45779%$ prediction accuracy and $81.48264%$ training accuracy using this method using a 10 fold cross validation which was similar to Lasso models but better than the Ridge model.
+
 Furthermore, when considering the training set as a matrix full of numerical variables or converting factors into numerical variables, this accuracy decreased by 2%. Therefore, we fit a matrix model initially to consider the factor variables in the correct manner and not loose accuracy during prediction.
 
 \subsection{Detailed kNN implementation}
-We also implemented a kNN at initial stage in order to identify if it could perform good on the given dataset. However, it was only able to obtain a prediction accuracy of $79.97%$ which was outperformed by random forest
+We also implemented a kNN at initial stage in order to identify if it could perform good on the given dataset. However, it was only able to obtain a prediction accuracy of $79.97%$ which was outperformed by random forest.
+kNN algorithm makes used of ditributing weights across different variables in order to make a prediction. These weights are set based on $k$ value defined in the given model.
+For out current implementation, we test out the best model fit across different $k$ values.
 ```{r, echo=FALSE, fig.cap="kNN Accuracy Plot"}
 #===============================================================================================================================
 #Accuracy of the KNN model at different k values
@@ -407,7 +443,7 @@ plot(fit, col = palette[1])
 y_pred = predict(fit, newdata = test_set)
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
-print("=====================================Random Forest=====================================")
+print("=====================================kNN=====================================")
 library(ggplot2)
 library(lattice)
 library(caret)
@@ -415,9 +451,7 @@ confusionMatrix(cm)
 ```
 \section{Annex}
 \subsection{Lasso and Ridge Implementation}
-This is presently something we are carrying out in order to identify a good fit for the model. Here,
-$nfolds$=10 (Number of Folds)
-
+This is presently something we are carrying out in order to identify a good fit for the model. Here, $nfolds$=10 (Number of Folds).
 ```{r, echo=FALSE, fig.cap="Ridge Glmnet Dependency chart"}
 rm(list=ls())
 print("Ridge Implementation")
@@ -473,9 +507,9 @@ ridge_coeffs <- coef(ridge.cv, s="lambda.min")
 pred_ridge.te <- predict(ridge.cv,newx=x_test,type='class')
 pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 
-print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
+#print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
 
-print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
+#print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
 
 #2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
 ```
@@ -538,16 +572,15 @@ pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 ```
 
 ```{r, echo=FALSE}
-print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
+#print(paste0("Testing Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_test,type='class')==ziptest$y))))
 
-print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
+#print(paste0("Training Accuracy: ",1-mean(!(predict(ridge.cv,newx = x_train,type='class')==ziptrain$y))))
 
 #2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
 ```
 
 \subsection{Preliminary Implementation}
 We started by dividing the set into 75-35 percent split and running them through different machine learning models in a crude manner to check out of the box which model tends to perform best on the given dataset.
-*Support Vector Machine*
 ```{r, echo=FALSE}
 #Support Vector Machine
 rm(list=ls())
@@ -601,7 +634,7 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 ```
-*Random Forest Classification*
+
 ```{r, echo=FALSE}
 #================================================================================================================
 rm(list=ls())
@@ -653,7 +686,7 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 ```
-*Logistic Regression*
+
 ```{r, echo=FALSE}
 #=================================================================================================================
 # Logistic Regression
@@ -705,7 +738,7 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 ```
-*Naive Bayes*
+
 ```{r, echo=FALSE}
 #=================================================================================================================
 #Naive Bayes
@@ -758,7 +791,7 @@ library(caret)
 confusionMatrix(cm)
 #=================================================================================================================
 ```
-*Decision Tree*
+
 ```{r, echo=FALSE}
 #Decision Tree Classification
 
@@ -811,7 +844,7 @@ library(lattice)
 library(caret)
 confusionMatrix(cm)
 ```
-*kNN*
+
 ```{r, echo=FALSE}
 #=================================================================================================================
 # k-nearest neighbors (K-NN)
