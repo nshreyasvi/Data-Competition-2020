@@ -836,7 +836,54 @@ print(1-mean(!(predict(ridge.cv,newx = x_train,type='class')==
 
 
 ```
+\section{Detailed kNN implementation}
+```{r}
+#===============================================================================================================================
+#Accuracy of the KNN model at different k values
+rm(list=ls())
+library(caret)
+set.seed(123)
+classSim <- read.csv('train.csv')
+classSim$y = factor(classSim$y, levels = c(0, 1))
 
+nfolds <- 10
+trControl <- trainControl(method  = "cv",
+                          number  = nfolds)
+max_k <- 100
+
+#Use this function to plot graphs for all the possible models used
+fit <- train(form = y ~ .,
+             data = classSim,
+             method     = "knn", #can be changed here to 17 other configurations including random forest etc and accuracy can be plotted vs n trees/k value etc
+             trControl  = trControl,
+             metric     = "Accuracy")
+
+palette = c(tolBlue = "#4477AA",
+            tolRed = "#EE6677",
+            tolGreen = "#228833",
+            tolYellow = "#CCBB44",
+            tolCyan = "#66CCEE",
+            tolPurple = "#AA3377",
+            tolGrey = "#BBBBBB") %>% unname()
+plot(fit, col = palette[1])
+```
+\section{GBM Implementation}
+```{r}
+#====================================================================================================
+rm(list=ls())
+#GBM to find most relevant variables
+library("gbm")
+set.seed(77850)
+dataset <- read.csv('train.csv')
+gbm.fit <- gbm(y~.,
+               distribution="bernouilli",
+               data=dataset,
+               n.trees=750,
+               interaction.depth=4,
+               shrinkage=0.01,cv.folds = 3)
+
+summary(gbm.fit)
+```
 
 \begin{table} 
 \begin{center}
