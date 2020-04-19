@@ -11,10 +11,14 @@ dplyr
 stringr
 forcats
 DataExplorer
-caTools
-e1071
 lattice
 caret
+caTools
 randomForest
+C50
+e1071
 rpart
 class
+MASS
+Matrix
+glmnet
