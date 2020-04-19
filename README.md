@@ -1,5 +1,6 @@
 # ml_2020
 ## Updates
+**-Added report.Rmd file test_code/report.Rmd**
 -Finished all analysis (check visual.R code for all analysis stuff)
 -Please find best model and do predictions (Try to submit one prediction using elasticnet ---------> let me know before you send it so i verify it, we can't loose tries at this point)
 - Detailed stuff is available at test_code/test.R (including pruning trees, other functions and shit) <---------------Use this for adding things, I made code for all things done in class
