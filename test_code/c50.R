@@ -34,12 +34,12 @@ palette = c(tolBlue = "#4477AA",
 plot(fit, col = palette[1])
 
 # Predicting the Test set results
-y_pred = predict(fit, newdata = test_set)
-#y_pred = predict(fit, newdata = dataset_1)
+#y_pred = predict(fit, newdata = test_set)
+y_pred = predict(fit, newdata = dataset_1)
 
 y_pred
 
-#write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
+write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
 cm
