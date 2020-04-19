@@ -305,7 +305,19 @@ We also carried out imputation of the given dataset replacing the values of "na"
 
 \section{C5.0 Implementation}
 While implementing several models, a good prediction accuracy was also observed in case of C5.0($87.15%$) over the given dataset.
-We will be presently exploring more on the same in order to try to add interaction and pre-process the dataset in order to increase the prediction accuracy further for the same.
+C5.0 uses the concept of entropy for measuring purity. The entropy of a sample of data indicates how mixed the class values are; the minimum value of 0 indicates that the sample is completely homogenous, while 1 indicates the maximum amount of disorder. The defintion of entropy can be specified as:
+$$
+  S = \sum_{i=1}^c -pi.log(pi),
+$$
+For a given segment of data ($S$), the term $c$ refers to the number of differenct class levels, and $pi$ refers to the proportion of values falling into the cass level $i$.
+We carry out the implementation of the C5.0 with and withou winnowing.
+The winnow algorithm is a technique from machine learning for learning a linear classifier from labeled examples.
+We will be presently exploring more on the same in order to try to add interaction and pre-process the dataset in order to increase the prediction accuracy further for the same. It applies the typical prediction rule for linear classifiers:
+If,
+$$
+  \sum_{i=1}^n wi.xi> Θ, y=1,else,0
+$$
+Here $Θ$ is a real number called threshold, $wi$ are the weights and $xi$ are the features, $y$ is the prediction label as a factor.
 ```{r, echo=FALSE}
 rm(list=ls())
 library(caret)
