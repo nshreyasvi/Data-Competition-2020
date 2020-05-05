@@ -1,10 +1,14 @@
 rm(list=ls())
 library(keras)
+library(tensorflow)
 library(caret)
 
 set.seed(123)
 
 dataset <- read.csv('train.csv')
+
+dataset$y = factor(dataset$y, levels = c(0, 1))
+
 indexes = createDataPartition(dataset$y, p = .85, list = F)
 
 train = dataset[indexes,]
@@ -50,6 +54,7 @@ ypred = model %>% predict(xtest)
 cat("RMSE:", RMSE(ytest, ypred))
 
 x_axes = seq(1:length(ypred))
+
 plot(x_axes, ytest, ylim = c(min(ypred), max(ytest)),
      col = "burlywood", type = "l", lwd = 2, ylab = "medv")
 lines(x_axes, ypred, col = "red", type = "l", lwd = 2)

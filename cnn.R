@@ -19,18 +19,19 @@ local.h2o <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE, nthreads=
 trData<-as.h2o(training_set)
 tsData<-as.h2o(test_set)
 
-res.dl <- h2o.deeplearning(x = 1:16, y = 17, trData, activation = "Tanh", hidden=rep(160,5),epochs = 20)
+res.dl <- h2o.deeplearning(x = 1:16, y = 17, trData, activation = "Tanh", hidden=rep(160,5),epochs = 10)
+plot(res.dl)
 
 #use model to predict testing dataset
 pred.dl<-h2o.predict(object=res.dl, newdata=tsData[,-17])
 pred.dl.df<-as.data.frame(pred.dl)
 
 summary(pred.dl)
-test_labels<-test[,17]
+test_labels<-test_set[,17]
 
 #calculate number of correct prediction
-#sum(diag(table(test_labels,pred.dl.df[,17])))
-confusionMatrix(table(test_labels,pred.dl.df[,17]))
+sum(diag(table(test_labels, pred.dl.df[,1])))/nrow(test_set)
+#confusionMatrix(table(test_labels,pred.dl))
 
 #================================================================================
 # read test.csv
@@ -45,3 +46,4 @@ confusionMatrix(table(test_labels,pred.dl.df[,17]))
 
 # shut down virtual H2O cluster
 h2o.shutdown(prompt = FALSE)
+
