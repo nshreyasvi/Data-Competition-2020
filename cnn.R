@@ -9,6 +9,8 @@ dataset <- read.csv('train.csv')
 test <- read.csv('test.csv')
 
 dataset$y = factor(dataset$y, levels = c(0, 1))
+dataset$age = log(dataset$age)
+
 #dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 
 split = sample.split(dataset$y, SplitRatio = 0.75)
@@ -19,7 +21,7 @@ local.h2o <- h2o.init(ip = "localhost", port = 54321, startH2O = TRUE, nthreads=
 trData<-as.h2o(training_set)
 tsData<-as.h2o(test_set)
 
-res.dl <- h2o.deeplearning(x = 1:16, y = 17, trData, activation = "Tanh", hidden=rep(160,5),epochs = 10)
+res.dl <- h2o.deeplearning(x = 1:16, y = 17, trData, activation = "Tanh", hidden=rep(160,5), use_all_factor_levels = FALSE,  distribution = c("AUTO"),epochs = 10)
 plot(res.dl)
 
 #use model to predict testing dataset

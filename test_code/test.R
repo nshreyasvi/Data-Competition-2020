@@ -452,3 +452,42 @@ library(lattice)
 library(caret)
 confusionMatrix(lda_cm)
 confusionMatrix(qda_cm)
+
+#===============================================================================================
+rm(list=ls())
+library(caret)
+library(C50)
+library(caTools)
+set.seed(123)
+dataset <- read.csv('train.csv')
+dataset_1 <- read.csv('test.csv')
+
+dataset$y = factor(dataset$y, levels = c(0, 1))
+dataset$age = log(dataset$age)
+
+split = sample.split(dataset$y, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+
+fit <- train(form = y ~ .,
+             data = training_set,
+             method     = "svmRadialSigma", 
+             metric     = "Accuracy")
+
+plot(fit)
+
+# Predicting the Test set results
+y_pred = predict(fit, newdata = test_set)
+
+y_pred
+
+# Making the Confusion Matrix
+cm = table(test_set[,17], y_pred)
+cm
+print("=====================================Random Forest=====================================")
+library(ggplot2)
+library(lattice)
+library(caret)
+confusionMatrix(cm)
+
+
