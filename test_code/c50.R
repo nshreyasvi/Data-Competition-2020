@@ -23,15 +23,6 @@ test_set = subset(dataset, split == FALSE)
 nfolds <- 5
 trControl <- trainControl(method  = "cv",
                           number  = nfolds)
-
-gbmFit1 <- train(y ~ ., data = training_set, 
-                 method = "gbm", 
-                 trControl = trControl,
-                 ## This last option is actually one
-                 ## for gbm() that passes through
-                 verbose = FALSE)
-gbmFit1
-
 fit <- train(form=y ~ .,
              data = training_set,
              method     = "C5.0", 
@@ -43,13 +34,13 @@ fit <- train(form=y ~ .,
 plot(fit)
 
 # Predicting the Test set results
-#y_pred = predict(fit, newdata = test_set)
-y_pred = predict(fit, newdata = dataset_1)
+y_pred = predict(fit, newdata = test_set)
+#y_pred = predict(fit, newdata = dataset_1)
 
 y_pred
 
 
-write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
+#write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
 cm
