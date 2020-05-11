@@ -354,9 +354,9 @@ y<-as.matrix(dat[,17])
 grid <- 10^(seq(4,-2,length=61))
 
 #Ridge
-fit.ridge<- glmnet(x,y,alpha = 0, lambda = grid,family = "binomial", standardize = TRUE)
+fit.ridge<- glmnet(x,y,alpha = 0.5, lambda = grid,family = "binomial", standardize = TRUE)
 plot(fit.ridge,xvar="lambda")
-cv.fit.ridge<- cv.glmnet(x,y,alpha = 0, lambda = grid,family = "binomial", standardize = TRUE)
+cv.fit.ridge<- cv.glmnet(x,y,alpha = 0.5, lambda = grid,family = "binomial", standardize = TRUE)
 plot(cv.fit.ridge,xvar="lambda")
 
 #Lasso
@@ -369,6 +369,7 @@ plot(cv.fit.lasso,xvar="lambda")
 rm(list=ls())
 library(MASS)
 library(tidyverse)
+library(caTools)
 set.seed(42)
 
 dataset<-read.csv('train.csv')
@@ -387,7 +388,7 @@ ziptest = subset(dataset, split == FALSE)
 library(glmnet)
 
 ridge.fit <- glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
-                                family='binomial',alpha=0)
+                                family='binomial',alpha=0.5)
 
 plot(ridge.fit,xvar='lambda',label=TRUE)
 
@@ -409,7 +410,7 @@ lines(log(ridge.fit$lambda),ridge.test,col='red')
 lines(log(ridge.fit$lambda),rep(0,nlam),lty='dotdash')
 
 ridge.cv <- cv.glmnet(x=as.matrix(ziptrain[,-17]),y=ziptrain[,17],
-                      family='binomial',alpha=0,nfolds=5)
+                      family='binomial',alpha=0.5,nfolds=5)
 plot(ridge.cv)
 
 ridge.cv$lambda.min
@@ -489,5 +490,6 @@ library(ggplot2)
 library(lattice)
 library(caret)
 confusionMatrix(cm)
+
 
 

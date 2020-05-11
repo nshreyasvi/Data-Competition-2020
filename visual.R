@@ -123,6 +123,8 @@ pred_ridge.tr <- predict(ridge.cv,newx=x_train,type='class')
 1-mean(!(predict(ridge.cv,newx = x_train,type='class')==
            ziptrain$y))
 
+
+
 #2% increase when categorical variables are fed using this method rather than converting into inteagers (Best works with alpha=0.5/elasticnet)
 
 
