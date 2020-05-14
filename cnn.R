@@ -14,8 +14,6 @@ dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
 dataset$banner_views_old <- log(dataset$banner_views_old)
 dataset$banner_views <- log(dataset$banner_views)
 
-
-
 split = sample.split(dataset$y, SplitRatio = 0.85)
 training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)

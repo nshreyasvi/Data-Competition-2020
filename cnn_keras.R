@@ -1,62 +1,68 @@
+#===================================================================================================================================
 rm(list=ls())
-library(keras)
-library(tensorflow)
 library(caret)
-
-set.seed(123)
+library(keras)
+library(tidyverse)
+library(caTools)
 
 dataset <- read.csv('train.csv')
+dataset_1 <- read.csv('test.csv')
+dataset_1 <- dataset_1[,-c(1)]
+
+summary(dataset)
 
 dataset$y = factor(dataset$y, levels = c(0, 1))
+dataset$X1 = factor(dataset$X1, levels = c(0, 1))
+dataset$X2 = factor(dataset$X2, levels = c(0, 1))
+dataset$X3 = factor(dataset$X3, levels = c(0, 1))
 
-indexes = createDataPartition(dataset$y, p = .85, list = F)
+y_train <- to_categorical(dataset$y)[,2]
 
-train = dataset[indexes,]
-test = dataset[-indexes,]
+x_train_num <- dataset %>%
+  select(-y, -month) %>%
+  select_if(is.numeric) %>%
+  as.matrix() %>%
+  scale()
 
-xtrain = as.matrix(train[,-17])
-ytrain = as.matrix(train[,17])
-xtest = as.matrix(test[,-17])
-ytest = as.matrix(test[, 17])
+x_train_fac <- dataset %>%
+  select(-y, -month) %>%
+  select_if(is.factor)
 
-dim(xtrain)
+dummy <- dummyVars("~.",x_train_fac)
+x_train_fac <- predict(dummy, newdata=x_train_fac)
 
-dim(ytrain)
+x_train <- cbind(x_train_num, x_train_fac, to_categorical(dataset$month))
 
-xtrain = array(xtrain, dim = c(nrow(xtrain), 16, 1))
-xtest = array(xtest, dim = c(nrow(xtest), 16, 1))
+model <- keras_model_sequential()
 
-dim(xtrain)
-dim(xtest)
+model %>%
+  layer_dense(units = 60, activation="relu", input_shape = c(ncol(x_train)),
+              kernel_regularizer = regularizer_l1()) %>%
+  layer_dropout(0.1) %>%
+  layer_dense(units = 60, activation = "relu",
+              kernel_regularizer = regularizer_l1()) %>%
+  layer_dropout(0.1) %>%
+  layer_dense(units = 60, activation = "relu") %>%
+  layer_dense(units = 60, activation = "linear") %>%
+  layer_dense(units = 1, activation = "sigmoid")
 
-in_dim = c(dim(xtrain)[2:3])
-print(in_dim)
-
-model = keras_model_sequential() %>%
-  layer_conv_1d(filters = 64, kernel_size = 2,
-                input_shape = in_dim, activation = "relu") %>%
-  layer_flatten() %>%
-  layer_dense(units = 32, activation = "relu") %>%
-  layer_dense(units = 1, activation = "linear")
+summary(model)
 
 model %>% compile(
-  loss = "mse",
-  optimizer = "adam")
+  loss = 'binary_crossentropy',
+  optimizer = 'adam',
+  metrics = 'accuracy'
+)
 
-model %>% summary()
+history <- model %>% fit(
+  x_train, y_train,
+  shuffle = TRUE,
+  epochs = 1000,
+  batch_size = 1000,
+  validation_split = 0.2,
+  callback = list(
+    callback_early_stopping(monitor = "val_accuracy", mode = "max", 
+                            restore_best_weights = TRUE,
+                            patience = 50, verbose = 0))
+)
 
-model %>% fit(xtrain, ytrain, epochs = 100, batch_size=16, verbose = 0)
-scores = model %>% evaluate(xtrain, ytrain, verbose = 0)
-print(scores)
-
-ypred = model %>% predict(xtest)
-
-cat("RMSE:", RMSE(ytest, ypred))
-
-x_axes = seq(1:length(ypred))
-
-plot(x_axes, ytest, ylim = c(min(ypred), max(ytest)),
-     col = "burlywood", type = "l", lwd = 2, ylab = "medv")
-lines(x_axes, ypred, col = "red", type = "l", lwd = 2)
-legend("topleft", legend = c("y-test", "y-pred"),
-       col = c("burlywood", "red"), lty=1, cex=0.7, lwd=2, bty='n')
