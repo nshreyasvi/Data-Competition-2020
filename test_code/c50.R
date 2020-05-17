@@ -11,28 +11,37 @@ levels(dataset$job)
 summary(dataset)
 dataset$y = factor(dataset$y, levels = c(0, 1))
 
+dataset$days_num = 1
+dataset$days_num[dataset$days_elapsed_old==-1] <- 0
 dataset$days_elapsed_old <- log(dataset$days_elapsed_old)
-dataset_1$days_elapsed_old <- log(dataset_1$days_elapsed_old)
-
+dataset$time_spent <- sqrt(dataset$time_spent)
 dataset[ dataset == "other" ] <- "na"
 dataset[ dataset == "divorced" ] <- "single"
 dataset[ dataset == "retired" ] <- "unemployed"
-
 dataset$job = as.numeric(dataset$job)
 dataset$marital = as.numeric(dataset$marital)
 dataset$education = as.numeric(dataset$education)
+dataset[is.na(dataset)] <- 0
+dataset$X1 = factor(dataset$X1, levels = c(0, 1))
+dataset$X2 = factor(dataset$X2, levels = c(0, 1))
+dataset$X3 = factor(dataset$X3, levels = c(0, 1))
+dataset$days_num = factor(dataset$days_num, levels = c(0, 1))
 
+dataset_1$days_num = 1
+dataset_1$days_num[dataset_1$days_elapsed_old==-1] <- 0
+dataset_1$days_elapsed_old <- log(dataset_1$days_elapsed_old)
+dataset_1$time_spent <- sqrt(dataset_1$time_spent)
 dataset_1[ dataset_1 == "other" ] <- "na"
 dataset_1[ dataset_1 == "divorced" ] <- "single"
 dataset_1[ dataset_1 == "retired" ] <- "unemployed"
-
 dataset_1$job = as.numeric(dataset_1$job)
 dataset_1$marital = as.numeric(dataset_1$marital)
 dataset_1$education = as.numeric(dataset_1$education)
-
-
-dataset[is.na(dataset)] <- 0
 dataset_1[is.na(dataset_1)] <- 0
+dataset_1$X1 = factor(dataset_1$X1, levels = c(0, 1))
+dataset_1$X2 = factor(dataset_1$X2, levels = c(0, 1))
+dataset_1$X3 = factor(dataset_1$X3, levels = c(0, 1))
+dataset_1$days_num = factor(dataset_1$days_num, levels = c(0, 1))
 
 split = sample.split(dataset$y, SplitRatio = 0.75)
 training_set = subset(dataset, split == TRUE)
@@ -52,13 +61,13 @@ fit <- train(form=y ~ .,
 plot(fit)
 
 # Predicting the Test set results
-#y_pred = predict(fit, newdata = test_set)
-y_pred = predict(fit, newdata = dataset_1)
+y_pred = predict(fit, newdata = test_set)
+#y_pred = predict(fit, newdata = dataset_1)
 
 y_pred
 
 
-write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
+#write.csv(data.frame(ID=1:4263, y=y_pred), file='prediction.csv', row.names=FALSE)
 # Making the Confusion Matrix
 cm = table(test_set[,17], y_pred)
 cm
@@ -67,6 +76,5 @@ library(ggplot2)
 library(lattice)
 library(caret)
 confusionMatrix(cm)
-
 #87.15 percent, 86.76% balanced accuracy
 

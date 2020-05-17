@@ -16,14 +16,16 @@ dataset$days_num[dataset$days_elapsed_old==-1] <- 0
 dataset$outcome_old[ dataset$outcome_old == "other" ] <- "na"
 dataset$outcome_old[ dataset$outcome_old == "na" ] <- "failure"
 
+dataset$time_spent = sqrt(dataset$time_spent)
+
 dataset$days_elapsed_old[dataset$days_elapsed_old==-1] <- 0
+dataset$days_elapsed_old <- sqrt(dataset$days_elapsed_old)
 
 dataset$y = factor(dataset$y, levels = c(0, 1))
 dataset$X1 = factor(dataset$X1, levels = c(0, 1))
 dataset$X2 = factor(dataset$X2, levels = c(0, 1))
 dataset$X3 = factor(dataset$X3, levels = c(0, 1))
-#dataset$outcome_old = factor(dataset$outcome_old, levels = c(0,1))
-dataset$days_num = factor(dataset$X3, levels = c(0, 1))
+dataset$days_num = factor(dataset$days_num, levels = c(0, 1))
 
 y_train <- to_categorical(dataset$y)[,2]
 
@@ -66,7 +68,7 @@ model %>% compile(
   metrics = 'accuracy'
 )
 
-history <- model %>% fit(
+cnn_model<- model %>% fit(
   x_train, y_train,
   shuffle = TRUE,
   epochs = 1000,
@@ -78,3 +80,36 @@ history <- model %>% fit(
                             patience = 50, verbose = 0))
 )
 
+#Processing for the test set
+summary(dataset_1)
+dataset_1$days_num = 1
+dataset_1$days_num[dataset_1$days_elapsed_old==-1] <- 0
+
+dataset_1$outcome_old[ dataset_1$outcome_old == "other" ] <- "na"
+dataset_1$outcome_old[ dataset_1$outcome_old == "na" ] <- "failure"
+
+dataset_1$time_spent = sqrt(dataset_1$time_spent)
+
+dataset_1$days_elapsed_old[dataset_1$days_elapsed_old==-1] <- 0
+dataset_1$days_elapsed_old <- sqrt(dataset_1$days_elapsed_old)
+
+dataset_1$X1 = factor(dataset_1$X1, levels = c(0, 1))
+dataset_1$X2 = factor(dataset_1$X2, levels = c(0, 1))
+dataset_1$X3 = factor(dataset_1$X3, levels = c(0, 1))
+dataset_1$days_num = factor(dataset_1$days_num, levels = c(0, 1))
+
+x_test_num <- dataset_1 %>%
+  select(-month, -day, - age) %>%
+  select_if(is.numeric) %>%
+  as.matrix() %>%
+  scale()
+
+x_test_fac <- dataset_1 %>%
+  select(-month, -day, -age) %>%
+  select_if(is.factor)
+
+x_test <- cbind(x_test_num, x_test_fac, to_categorical(dataset_1$month), to_categorical(dataset_1$age),to_categorical(dataset_1$day))
+
+pred <- model %>% 
+  predict_proba(x_test)
+pred

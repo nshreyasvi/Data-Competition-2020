@@ -7,14 +7,27 @@ library(keras)
 #set.seed(123)
 dataset <- read.csv('train.csv')
 
+dataset_1 <- dataset_1[,-c(1)]
+
+summary(dataset)
+dataset$days_num = 1
+dataset$days_num[dataset$days_elapsed_old==-1] <- 0
+
+dataset$outcome_old[ dataset$outcome_old == "other" ] <- "na"
+dataset$outcome_old[ dataset$outcome_old == "na" ] <- "failure"
+
+dataset$time_spent = sqrt(dataset$time_spent)
+
+dataset$days_elapsed_old[dataset$days_elapsed_old==-1] <- 0
+dataset$days_elapsed_old <- sqrt(dataset$days_elapsed_old)
+
 dataset$y = factor(dataset$y, levels = c(0, 1))
-dataset$age = log(dataset$age)
+dataset$X1 = factor(dataset$X1, levels = c(0, 1))
+dataset$X2 = factor(dataset$X2, levels = c(0, 1))
+dataset$X3 = factor(dataset$X3, levels = c(0, 1))
+dataset$days_num = factor(dataset$days_num, levels = c(0, 1))
 
-dataset$days_elapsed_old[dataset$days_elapsed_old<1] <- 0
-dataset$banner_views_old <- log(dataset$banner_views_old)
-dataset$banner_views <- log(dataset$banner_views)
-
-split = sample.split(dataset$y, SplitRatio = 0.85)
+split = sample.split(dataset$y, SplitRatio = 0.75)
 training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)
 
@@ -40,14 +53,6 @@ test_labels<-test_set[,17]
 #calculate number of correct prediction
 sum(diag(table(test_labels, pred.dl.df[,1])))/nrow(test_set)
 #confusionMatrix(table(test_labels,pred.dl))
-
-#================================================================================
-# read test.csv
-
-# convert H2O format into data frame and save as csv
-df.test <- as.data.frame(pred.dl.test)
-df.test <- data.frame(ImageId = seq(1,length(df.test$predict)), Label = df.test$predict)
-write.csv(df.test, file = "submission.csv", row.names=FALSE)
 
 # shut down virtual H2O cluster
 h2o.shutdown(prompt = FALSE)
