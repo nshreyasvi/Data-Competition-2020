@@ -176,6 +176,7 @@ confusionMatrix(cm)
 #accuracy ~ 84.43%, balanced accuracy ~ 87.03
 #================================================================================================================
 rm(list=ls())
+library(e1071)
 # Importing the dataset
 dataset = read.csv('train.csv')
 dataset_1 = read.csv('test.csv')
@@ -199,8 +200,9 @@ test_set = subset(dataset, split == FALSE)
 
 # Fitting SVM to the Training set
 classifier <- train(y~., data = training_set, method = "xgbTree", 
-              trControl = trainControl(method  = "cv",number  = 5), tuneLength = 5)
+              trControl = trainControl(method  = "cv",number  = 5), tuneLength = 10)
 # Predicting the Test set results
+saveRDS(classifier, "xgbtree.rds")
 y_pred = predict(classifier, newdata = test_set[-17])
 y_pred
 
